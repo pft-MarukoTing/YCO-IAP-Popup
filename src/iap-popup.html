@@ -1,0 +1,441 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     YCO IAP POPUP — "Pro Plan with More Monthly Credit Options" (PM p.27)
+     ≥ 900px   Desktop : two columns (plans | What's included)
+     600–899px Tablet  : one column, centered, CTA pinned to the bottom
+     < 600px   Mobile  : bottom sheet, drag handle / swipe down to close
+     Open with openIAP(), close with closeIAP().
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  #iapOverlay {
+    --c-brand: #03ADE2; --c-brand-dark: #0292C0; --c-brand-soft: #E7F6FC;
+    --c-green: #4CD137;
+    --c-text: #15171F; --c-text-2: #4A5560; --c-text-3: #8A96A3; --c-text-4: #B4BDC6;
+    --c-line: #E6EBF0; --c-fill: #F2F5F8; --c-panel: #F8FAFB; --c-white: #fff;
+    --c-sale: #E53935;
+    --radius-card: 14px;
+    position: fixed; inset: 0; z-index: 2147483000;
+    display: none; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(9,22,26,0.55);
+    font-family: 'Roboto', system-ui, sans-serif; color: var(--c-text);
+    -webkit-font-smoothing: antialiased; line-height: normal; text-align: left;
+  }
+  #iapOverlay.open { display: flex; animation: iapFade .2s ease; }
+  :where(#iapOverlay) *, :where(#iapOverlay) *::before, :where(#iapOverlay) *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :where(#iapOverlay) button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :where(#iapOverlay) a { color: inherit; text-decoration: none; }
+  #iapOverlay [hidden] { display: none !important; }
+  #iapOverlay :focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
+
+  /* ── Shell: desktop grid ─────────────────────────────── */
+  .iap-modal {
+    position: relative; width: 880px; max-width: 100%;
+    max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px);
+    background: var(--c-white); border-radius: 20px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,.2), 0 8px 20px rgba(0,0,0,.12);
+    display: grid; grid-template-columns: 384px 1fr; grid-template-rows: 1fr auto;
+    grid-template-areas: "main incl" "foot incl";
+  }
+  .iap-scroll { display: contents; }
+  .iap-main { grid-area: main; background: var(--c-panel); padding: 28px 28px 8px; overflow-y: auto; border-right: 1px solid var(--c-line); }
+  .iap-incl { grid-area: incl; padding: 28px 28px 24px; overflow-y: auto; }
+  .iap-foot { grid-area: foot; background: var(--c-panel); padding: 12px 28px 20px; border-right: 1px solid var(--c-line); }
+
+  .iap-top { position: absolute; top: 16px; right: 16px; z-index: 5; }
+  .iap-handle { display: none; }
+  .iap-close {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--c-fill) !important;
+    display: grid; place-items: center; color: var(--c-text-3) !important; transition: background .15s, color .15s;
+  }
+  .iap-close:hover { background: var(--c-line) !important; color: var(--c-text) !important; }
+
+  /* ── Left: title + billing toggle ────────────────────── */
+  .iap-title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 16px; }
+  .iap-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--c-fill); border-radius: 10px; margin-bottom: 16px; }
+  .iap-toggle button {
+    height: 40px; border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--c-text-3) !important;
+    display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, color .15s, box-shadow .15s;
+  }
+  .iap-toggle button[aria-pressed="true"] { background: var(--c-white) !important; color: var(--c-text) !important; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .iap-save { font-size: 11.5px; font-weight: 700; color: #fff; padding: 3px 9px; border-radius: 20px; background: linear-gradient(135deg, #29C4F6, #0292C0); white-space: nowrap; }
+
+  /* ── Plan cards ──────────────────────────────────────── */
+  .iap-plans { display: flex; flex-direction: column; gap: 12px; }
+  .iap-plan {
+    position: relative; background: var(--c-white); border: 1.5px solid var(--c-line); border-radius: var(--radius-card);
+    padding: 16px 18px; cursor: pointer; transition: border-color .15s, box-shadow .15s;
+  }
+  .iap-plan:hover { border-color: #C9D3DC; }
+  .iap-plan[aria-checked="true"] { border-color: var(--c-brand); box-shadow: 0 0 0 4px rgba(3,173,226,.10); }
+  .iap-plan-head { display: flex; align-items: center; gap: 8px; }
+  .iap-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #C3CCD5; display: grid; place-items: center; flex-shrink: 0; transition: border-color .15s; }
+  .iap-radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--c-brand); transform: scale(0); transition: transform .15s; }
+  .iap-plan[aria-checked="true"] .iap-radio { border-color: var(--c-brand); }
+  .iap-plan[aria-checked="true"] .iap-radio::after { transform: scale(1); }
+  .iap-plan-name { font-size: 18px; font-weight: 700; }
+  .iap-tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+  .iap-tag.plus { background: rgba(3,173,226,.12); color: var(--c-brand-dark); }
+  .iap-tag.pro { background: linear-gradient(135deg, #FF8C00, #FFA726); color: #fff; }
+  .iap-price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .iap-price { font-size: 28px; font-weight: 700; color: var(--c-brand); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .iap-per { font-size: 15px; color: var(--c-text-3); }
+  .iap-strike { font-size: 15px; color: var(--c-text-4); text-decoration: line-through; }
+  .iap-sub { font-size: 13.5px; color: var(--c-text-3); margin-top: 2px; }
+  .iap-sub strong { color: var(--c-text); font-weight: 600; }
+
+  /* Credit slider (Pro) */
+  .iap-slider { margin-top: 14px; cursor: default; }
+  .iap-slider-label { font-size: 13.5px; color: var(--c-text-3); margin-bottom: 6px; }
+  .iap-range {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; margin: 10px 0 8px;
+    background: var(--c-fill); outline: none; cursor: pointer;
+  }
+  .iap-range::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 3px solid var(--c-brand); box-shadow: 0 2px 6px rgba(3,173,226,.35); cursor: grab; }
+  .iap-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--c-brand); box-shadow: 0 2px 6px rgba(3,173,226,.35); cursor: grab; }
+  .iap-ticks { display: flex; justify-content: space-between; }
+  .iap-ticks button { font-size: 13.5px; color: var(--c-text-3) !important; padding: 4px 2px; font-variant-numeric: tabular-nums; }
+  .iap-ticks button[aria-current="true"] { color: var(--c-brand) !important; font-weight: 700; }
+
+  /* ── Footer CTA ──────────────────────────────────────── */
+  .iap-cta {
+    width: 100%; height: 52px; border-radius: 100px; font-size: 17px; font-weight: 700; color: #fff !important;
+    background: linear-gradient(90deg, #03ADE2, #4CD137) !important; box-shadow: 0 8px 22px rgba(3,173,226,.3);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .iap-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(3,173,226,.38); }
+  .iap-buy { display: block; width: 100%; padding: 12px 0 6px; font-size: 15px; font-weight: 600; color: var(--c-text) !important; text-align: center; }
+  .iap-buy:hover { color: var(--c-brand-dark) !important; }
+  .iap-fine { font-size: 12.5px; color: var(--c-text-3); text-align: center; margin-top: 4px; }
+
+  /* ── Right: What's included ──────────────────────────── */
+  .iap-incl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-right: 48px; min-height: 36px; }
+  .iap-incl-head h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .iap-feat { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .iap-feat li { display: flex; align-items: flex-start; gap: 12px; padding: 9px 12px; border-radius: 10px; font-size: 15.5px; line-height: 1.45; color: var(--c-text); }
+  .iap-feat li:first-child { background: var(--c-brand-soft); }
+  .iap-feat b { color: var(--c-brand); font-weight: 700; }
+  .iap-ck { width: 22px; height: 22px; border-radius: 50%; background: var(--c-brand); display: grid; place-items: center; flex-shrink: 0; margin-top: 0; }
+  .iap-ck svg { width: 12px; height: 12px; }
+  .iap-minus { width: 22px; height: 22px; border-radius: 50%; background: var(--c-line); color: var(--c-text-3); display: grid; place-items: center; flex-shrink: 0; font-weight: 700; }
+  .iap-feat .iap-up { color: var(--c-brand) !important; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+
+  .iap-agent { margin-top: 16px; border: 1px solid var(--c-line); background: #FAFBFC; border-radius: 12px; padding: 6px 16px; }
+  .iap-agent-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 14.5px; color: var(--c-text-2); }
+  .iap-agent-row a { color: var(--c-brand) !important; font-weight: 500; white-space: nowrap; }
+  .iap-agent-row a:hover { text-decoration: underline; }
+  .iap-compare {
+    display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 16px; height: 48px;
+    border: 1.5px solid var(--c-line); border-radius: 12px; font-size: 15px; font-weight: 600; color: var(--c-brand) !important;
+    transition: border-color .15s, background .15s;
+  }
+  .iap-compare:hover { border-color: var(--c-brand); background: rgba(3,173,226,.04); }
+
+  .iap-toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 2147483001;
+    background: rgba(21,23,31,.92); color: #fff; font: 500 13.5px/1.4 'Roboto', sans-serif; padding: 10px 16px; border-radius: 10px;
+    max-width: calc(100vw - 32px); box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  }
+
+  /* ── < 900px: one column ─────────────────────────────── */
+  @media (max-width: 899px) {
+    #iapOverlay { padding: 20px; }
+    .iap-modal { width: 560px; display: flex; flex-direction: column; }
+    .iap-top { top: 14px; right: 14px; }
+    .iap-scroll { display: block; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .iap-main { background: var(--c-white); border-right: 0; padding: 22px 24px 8px; overflow: visible; }
+    .iap-title { padding-right: 48px; min-height: 36px; display: flex; align-items: center; }
+    .iap-incl { padding: 20px 24px 20px; overflow: visible; }
+    .iap-incl-head { padding: 18px 0 0; border-top: 1px solid var(--c-line); min-height: 0; }
+    .iap-foot { background: var(--c-white); border-right: 0; border-top: 1px solid var(--c-line); padding: 12px 24px 16px; flex-shrink: 0; }
+  }
+
+  /* ── < 600px: bottom sheet ───────────────────────────── */
+  @media (max-width: 599px) {
+    #iapOverlay { padding: 0; align-items: flex-end; }
+    .iap-modal {
+      width: 100%; max-height: 92vh; max-height: 92dvh; border-radius: 24px 24px 0 0;
+      animation: iapUp .38s cubic-bezier(.32,.72,0,1);
+    }
+    .iap-top { position: relative; top: auto; right: auto; height: 44px; flex-shrink: 0; touch-action: none; cursor: grab; }
+    .iap-handle { display: block; width: 36px; height: 4px; border-radius: 4px; background: var(--c-line); position: absolute; top: 10px; left: 50%; margin-left: -18px; }
+    .iap-close { position: absolute; right: 12px; top: 8px; width: 32px; height: 32px; }
+    .iap-main { padding: 0 18px 6px; }
+    .iap-title { font-size: 18px; padding-right: 0; min-height: 0; margin-bottom: 14px; }
+    .iap-toggle button { height: 38px; font-size: 14.5px; }
+    .iap-plan { padding: 14px 14px; }
+    .iap-price { font-size: 24px; }
+    .iap-per, .iap-strike { font-size: 14px; }
+    .iap-sub { font-size: 12.5px; }
+    .iap-ticks button { font-size: 12px; }
+    .iap-incl { padding: 16px 18px 16px; }
+    .iap-incl-head h3 { font-size: 17px; }
+    .iap-feat li { font-size: 14.5px; padding: 8px 10px; gap: 10px; }
+    .iap-ck, .iap-minus { width: 20px; height: 20px; }
+    .iap-foot { padding: 10px 18px calc(12px + env(safe-area-inset-bottom)); }
+    .iap-cta { height: 48px; font-size: 16px; }
+    .iap-buy { padding: 10px 0 4px; font-size: 14.5px; }
+    .iap-fine { font-size: 11.5px; }
+    #iapOverlay.closing { animation: iapFadeOut .28s ease forwards; }
+    #iapOverlay.closing .iap-modal { animation: iapDown .28s cubic-bezier(.4,0,1,1) forwards; }
+  }
+
+  @keyframes iapFade { from { background: rgba(9,22,26,0); } }
+  @keyframes iapFadeOut { to { background: rgba(9,22,26,0); } }
+  @keyframes iapUp { from { transform: translateY(100%); } }
+  @keyframes iapDown { from { transform: translateY(var(--drag-y, 0px)); } to { transform: translateY(100%); } }
+  @media (prefers-reduced-motion: reduce) { #iapOverlay, #iapOverlay * { animation-duration: 1ms !important; } }
+</style>
+
+<div class="iap-overlay" id="iapOverlay" aria-hidden="true">
+  <div class="iap-modal" role="dialog" aria-modal="true" aria-labelledby="iapTitle">
+    <div class="iap-top">
+      <span class="iap-handle" aria-hidden="true"></span>
+      <button class="iap-close" id="iapClose" type="button" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="iap-scroll" id="iapScroll">
+      <!-- LEFT: plans -->
+      <section class="iap-main">
+        <h2 class="iap-title" id="iapTitle">Choose the Right Plan for You</h2>
+
+        <!-- 1. Monthly / Yearly -->
+        <div class="iap-toggle" role="group" aria-label="Billing period">
+          <button type="button" id="iapMonthly" aria-pressed="false">Monthly</button>
+          <button type="button" id="iapYearly" aria-pressed="true">Yearly <span class="iap-save" id="iapSave">60% off</span></button>
+        </div>
+
+        <div class="iap-plans" role="radiogroup" aria-label="Plan">
+          <!-- 2–4. Plus -->
+          <div class="iap-plan" id="iapPlus" role="radio" tabindex="0" aria-checked="false">
+            <div class="iap-plan-head"><span class="iap-radio"></span><span class="iap-plan-name">Plus</span><span class="iap-tag plus">Plus</span></div>
+            <div class="iap-price-row"><span class="iap-price" id="iapPlusPrice">$3.33</span><span class="iap-per">/mo</span><span class="iap-strike" id="iapPlusStrike">$9.99/mo</span></div>
+            <div class="iap-sub" id="iapPlusSub">Billed $39.96/year · 100 Credits / month</div>
+          </div>
+
+          <!-- 2–5. Pro + credit slider -->
+          <div class="iap-plan" id="iapPro" role="radio" tabindex="0" aria-checked="true">
+            <div class="iap-plan-head"><span class="iap-radio"></span><span class="iap-plan-name">Pro</span><span class="iap-tag pro">Pro</span></div>
+            <div class="iap-price-row"><span class="iap-price" id="iapProPrice">$7.99</span><span class="iap-per">/mo</span><span class="iap-strike" id="iapProStrike">$19.99/mo</span></div>
+            <div class="iap-sub" id="iapProSub">Billed $95.88/year · <strong>300 Credits / month</strong></div>
+            <div class="iap-slider" id="iapSlider">
+              <div class="iap-slider-label" id="iapSliderLabel">Monthly credits</div>
+              <input class="iap-range" id="iapRange" type="range" min="0" max="5" step="1" value="0" aria-labelledby="iapSliderLabel">
+              <div class="iap-ticks" id="iapTicks"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: what's included -->
+      <section class="iap-incl" aria-labelledby="iapInclTitle">
+        <div class="iap-incl-head">
+          <h3 id="iapInclTitle">What's included in</h3><span class="iap-tag pro" id="iapInclTag">Pro</span>
+        </div>
+        <!-- 6. Check list -->
+        <ul class="iap-feat" id="iapFeat"></ul>
+        <div class="iap-agent">
+          <div class="iap-agent-row"><span>YouCam AI Agent</span><a id="iapUsage" href="#" target="_blank" rel="noopener">Usage details</a></div>
+          <div class="iap-agent-row"><span>AI Agent Connector</span><a id="iapExplore" href="#" target="_blank" rel="noopener">Explore</a></div>
+        </div>
+        <!-- 7. Full comparison → Pricing page (Subscription tab) -->
+        <a class="iap-compare" id="iapCompare" href="#" target="_blank" rel="noopener">View Full Feature Comparison ›</a>
+      </section>
+    </div>
+
+    <!-- 8. CTA -->
+    <div class="iap-foot">
+      <button class="iap-cta" id="iapCta" type="button">Subscribe Now</button>
+      <a class="iap-buy" id="iapBuy" href="#" target="_blank" rel="noopener">Buy Credits</a>
+      <p class="iap-fine" id="iapFine">$95.88 billed yearly · Cancel anytime · Secure checkout 🔒</p>
+    </div>
+  </div>
+</div>
+<div class="iap-toast" id="iapToast" role="status" hidden></div>
+
+<script>
+(function () {
+  // ── Config ────────────────────────────────────────────────
+  // Prices (USD) from the YCO pricing page prototype (discount=off).
+  var PLUS  = { c: 100, y: 3.33, m: 9.99 };
+  var TIERS = [
+    { c: 300,   y: 7.99,   m: 19.99  },
+    { c: 800,   y: 20.83,  m: 34.99  },
+    { c: 1500,  y: 35.83,  m: 59.99  },
+    { c: 2500,  y: 54.17,  m: 89.99  },
+    { c: 5000,  y: 99.99,  m: 164.99 },
+    { c: 10000, y: 199.99, m: 319.99 }
+  ];
+  var PRICING_URL = 'https://pricing-page-optimization.vercel.app/?discount=off';
+  var LINKS = {
+    compare: PRICING_URL + '&tab=sub',            // 7. Pricing page — Subscription tab
+    buy:     PRICING_URL + '&tab=payg',           // 8. Pricing page — Pay as you go tab
+    usage:   PRICING_URL + '#cmp-ai-agent',
+    explore: 'https://yce.perfectcorp.com/products/youcam-for-ai-assistants'
+  };
+
+  var state = { plan: 'pro', yearly: true, tier: 0 };
+  var $ = function (id) { return document.getElementById(id); };
+  var money = function (n) { return '$' + n.toFixed(2); };
+  var num = function (n) { return n.toLocaleString('en-US'); };
+  var yearTotal = function (p) { return Math.round(p.y * 12 * 100) / 100; };
+  // 1. Discount % = 1 − yearly price / (monthly price × 12)
+  var discount = function (p) { return 1 - yearTotal(p) / (p.m * 12); };
+  var maxOff = Math.round(Math.max.apply(null, [PLUS].concat(TIERS).map(discount)) * 100);
+
+  var CK = '<span class="iap-ck"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+  var li = function (html) { return '<li>' + CK + '<span>' + html + '</span></li>'; };
+
+  var overlay = $('iapOverlay'), modal = overlay.querySelector('.iap-modal');
+  var MOBILE = window.matchMedia('(max-width: 599px)');
+  var lastFocus = null;
+
+  $('iapSave').textContent = maxOff + '% off';
+  $('iapUsage').href = LINKS.usage;
+  $('iapExplore').href = LINKS.explore;
+  $('iapCompare').href = LINKS.compare;
+  $('iapBuy').href = LINKS.buy;
+
+  TIERS.forEach(function (t, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = num(t.c); b.setAttribute('aria-label', num(t.c) + ' credits per month');
+    b.addEventListener('click', function (e) { e.stopPropagation(); setTier(i); });
+    $('iapTicks').appendChild(b);
+  });
+
+  function setTier(i) { state.tier = i; state.plan = 'pro'; render(); }
+
+  function render() {
+    var t = TIERS[state.tier], y = state.yearly;
+    $('iapYearly').setAttribute('aria-pressed', y);
+    $('iapMonthly').setAttribute('aria-pressed', !y);
+    $('iapPlus').setAttribute('aria-checked', state.plan === 'plus');
+    $('iapPro').setAttribute('aria-checked', state.plan === 'pro');
+
+    // 3–4. Plus
+    $('iapPlusPrice').textContent = money(y ? PLUS.y : PLUS.m);
+    $('iapPlusStrike').textContent = money(PLUS.m) + '/mo';
+    $('iapPlusStrike').hidden = !y;
+    $('iapPlusSub').textContent = (y ? 'Billed ' + money(yearTotal(PLUS)) + '/year' : 'Billed monthly') + ' · 100 Credits / month';
+
+    // 3–5. Pro (follows the slider)
+    $('iapProPrice').textContent = money(y ? t.y : t.m);
+    $('iapProStrike').textContent = money(t.m) + '/mo';
+    $('iapProStrike').hidden = !y;
+    $('iapProSub').innerHTML = (y ? 'Billed ' + money(yearTotal(t)) + '/year' : 'Billed monthly') + ' · <strong>' + num(t.c) + ' Credits / month</strong>';
+
+    var r = $('iapRange'), pct = state.tier / (TIERS.length - 1) * 100;
+    r.value = state.tier;
+    r.setAttribute('aria-valuetext', num(t.c) + ' credits per month');
+    r.style.background = 'linear-gradient(90deg, #03ADE2 0%, #4CD137 ' + pct + '%, #F2F5F8 ' + pct + '%)';
+    Array.prototype.forEach.call($('iapTicks').children, function (b, i) { b.setAttribute('aria-current', i === state.tier); });
+
+    // 6. Check list
+    var tag = $('iapInclTag');
+    if (state.plan === 'pro') {
+      tag.textContent = 'Pro'; tag.className = 'iap-tag pro';
+      $('iapFeat').innerHTML =
+        li('<b>' + num(t.c) + ' Credits</b> / per month') +
+        li('Watermark-free, High-quality Downloads') +
+        li('Batch Photo Editing') +
+        li('100 GB Cloud Storage') +
+        li('<b>Daily FREE</b> AI Agent Chats for Quick Edits') +
+        li('<b>40% OFF</b> Additional Credit Purchases') +
+        li('Commercial Use Rights Included');
+    } else {
+      tag.textContent = 'Plus'; tag.className = 'iap-tag plus';
+      $('iapFeat').innerHTML =
+        li('<b>100 Credits</b> / per month') +
+        li('Watermark-free, High-quality Downloads') +
+        li('Batch Photo Editing') +
+        li('10 GB Cloud Storage') +
+        '<li><span class="iap-minus">–</span><span>Want more credits, Daily FREE AI Agent chats &amp; Commercial License? <button type="button" class="iap-up" id="iapToPro">Upgrade to Pro</button></span></li>';
+      $('iapToPro').addEventListener('click', function () { state.plan = 'pro'; render(); });
+    }
+
+    // Fine print
+    var p = state.plan === 'pro' ? t : PLUS;
+    $('iapFine').textContent = (y ? money(yearTotal(p)) + ' billed yearly' : money(p.m) + ' billed monthly') + ' · Cancel anytime · Secure checkout 🔒';
+  }
+
+  // ── Interactions ──────────────────────────────────────────
+  $('iapYearly').addEventListener('click', function () { state.yearly = true; render(); });
+  $('iapMonthly').addEventListener('click', function () { state.yearly = false; render(); });
+  $('iapPlus').addEventListener('click', function () { state.plan = 'plus'; render(); });
+  $('iapPro').addEventListener('click', function (e) { if (e.target.closest('.iap-slider')) return; state.plan = 'pro'; render(); });
+  $('iapSlider').addEventListener('click', function () { if (state.plan !== 'pro') { state.plan = 'pro'; render(); } });
+  $('iapRange').addEventListener('input', function (e) { setTier(+e.target.value); });
+  ['iapPlus', 'iapPro'].forEach(function (id) {
+    $(id).addEventListener('keydown', function (e) {
+      if (e.target !== e.currentTarget) return;
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); state.plan = id === 'iapPlus' ? 'plus' : 'pro'; render(); }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); state.plan = state.plan === 'plus' ? 'pro' : 'plus'; render(); $(state.plan === 'plus' ? 'iapPlus' : 'iapPro').focus(); }
+    });
+  });
+
+  var toastTimer;
+  function toast(msg) { var el = $('iapToast'); el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.hidden = true; }, 3200); }
+  $('iapCta').addEventListener('click', function () {
+    var t = TIERS[state.tier], p = state.plan === 'pro' ? t : PLUS;
+    var what = state.plan === 'pro' ? 'Pro · ' + num(t.c) + ' Credits/mo' : 'Plus · 100 Credits/mo';
+    toast('Prototype: goes to checkout — ' + what + ' · ' + (state.yearly ? 'Yearly ' + money(yearTotal(p)) : 'Monthly ' + money(p.m)));
+  });
+
+  // ── Open / close ──────────────────────────────────────────
+  window.openIAP = function () {
+    lastFocus = document.activeElement;
+    state.plan = 'pro'; state.yearly = true; state.tier = 0; render();
+    overlay.classList.remove('closing');
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    $('iapScroll').scrollTop = 0;
+    setTimeout(function () { $('iapClose').focus({ preventScroll: true }); }, 30);
+  };
+  function finishClose() {
+    overlay.classList.remove('open', 'closing'); overlay.setAttribute('aria-hidden', 'true');
+    modal.style.transform = ''; modal.style.removeProperty('--drag-y');
+    document.body.style.overflow = '';
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  window.closeIAP = function () {
+    if (!overlay.classList.contains('open') || overlay.classList.contains('closing')) return;
+    if (MOBILE.matches) { overlay.classList.add('closing'); setTimeout(finishClose, 280); }
+    else finishClose();
+  };
+  $('iapClose').addEventListener('click', window.closeIAP);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) window.closeIAP(); });
+  document.addEventListener('keydown', function (e) {
+    if (!overlay.classList.contains('open')) return;
+    if (e.key === 'Escape') window.closeIAP();
+    if (e.key === 'Tab') {   // keep focus inside the dialog
+      var f = modal.querySelectorAll('button, a[href], input, [tabindex="0"]');
+      f = Array.prototype.filter.call(f, function (el) { return el.offsetParent !== null; });
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+    }
+  });
+
+  // Swipe the top bar down to dismiss (mobile)
+  var top = modal.querySelector('.iap-top'), startY = null, dy = 0;
+  top.addEventListener('pointerdown', function (e) {
+    if (!MOBILE.matches || e.target.closest('.iap-close')) return;
+    startY = e.clientY; dy = 0; modal.style.animation = 'none'; modal.style.transition = 'none';
+    top.setPointerCapture(e.pointerId);
+  });
+  top.addEventListener('pointermove', function (e) {
+    if (startY === null) return;
+    dy = Math.max(0, e.clientY - startY); modal.style.transform = 'translateY(' + dy + 'px)';
+  });
+  function endDrag() {
+    if (startY === null) return;
+    startY = null; modal.style.animation = '';
+    if (dy > 100) { modal.style.setProperty('--drag-y', dy + 'px'); window.closeIAP(); }
+    else { modal.style.transition = 'transform .25s cubic-bezier(.32,.72,0,1)'; modal.style.transform = ''; setTimeout(function () { modal.style.transition = ''; }, 260); }
+  }
+  top.addEventListener('pointerup', endDrag);
+  top.addEventListener('pointercancel', endDrag);
+
+  render();
+})();
+</script>
