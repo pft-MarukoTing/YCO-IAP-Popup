@@ -281,7 +281,8 @@
   var yearTotal = function (p) { return Math.round(p.y * 12 * 100) / 100; };
   // 1. Discount % = 1 − yearly price / (monthly price × 12)
   var discount = function (p) { return 1 - yearTotal(p) / (p.m * 12); };
-  var maxOff = Math.round(Math.max.apply(null, [PLUS].concat(TIERS).map(discount)) * 100);
+  // Badge shows the Pro plan's highest discount (best Pro tier).
+  var maxOff = Math.round(Math.max.apply(null, TIERS.map(discount)) * 100);
 
   var CK = '<span class="iap-ck"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
   var li = function (html) { return '<li>' + CK + '<span>' + html + '</span></li>'; };

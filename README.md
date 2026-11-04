@@ -9,7 +9,7 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 
 | # | 項目 | 實作 |
 |---|---|---|
-| 1 | Monthly / Yearly tab | Yearly 標籤顯示所有方案中最高折扣：`1 − 年費 ÷ (月費 × 12)` |
+| 1 | Monthly / Yearly tab | Yearly 標籤顯示 Pro 方案的最高折扣（目前 60% off）：`1 − 年費 ÷ (月費 × 12)` |
 | 2 | Plus / Pro 選項 | Radio card，可鍵盤操作 |
 | 3 | 月均價 | Yearly：年費 ÷ 12，劃線為月訂價；Monthly：月訂價 |
 | 4 | 年訂閱總價 · 每月點數 | Plus 固定 100；Pro 跟著 slider |
