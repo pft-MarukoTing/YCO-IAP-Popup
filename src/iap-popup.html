@@ -86,25 +86,24 @@
   .iap-slider {
     margin-top: 14px; cursor: default;
     display: flex; flex-direction: column; gap: 8px;
-    padding: 34px 16px 12px; border: 2px solid rgba(255,136,0,.2); border-radius: 16px; background: rgba(255,136,0,.05);
-    --pro-gradient: linear-gradient(88.46deg, #ffb802 0%, #ffa51c 32.565%, #ff8800 99.797%);
+    padding: 34px 16px 12px; border: 2px solid rgba(3,173,226,.2); border-radius: 16px; background: rgba(3,173,226,.05);
   }
   .iap-track { position: relative; height: 26px; touch-action: none; cursor: pointer; outline: none; --pos: 8px; }
   .iap-track .bar, .iap-track .progress, .iap-track .hint-trail { position: absolute; top: 50%; height: 6px; margin-top: -3px; border-radius: 19px; }
   .iap-track .bar { left: 4px; right: 4px; background: rgba(17,24,26,.2); }
-  .iap-track .progress { left: 4px; width: calc(var(--pos) - 4px); background: var(--pro-gradient); }
+  .iap-track .progress { left: 4px; width: calc(var(--pos) - 4px); background: var(--c-brand); }
   .iap-track .handle { position: absolute; z-index: 1; top: 0; left: var(--pos); width: 26px; height: 26px; margin-left: -13px; transition: transform .15s; }
   .iap-track:not(.dragging) .progress { transition: width .18s ease; }
   .iap-track:not(.dragging) .handle { transition: left .18s ease, transform .15s; }
   .iap-track:hover .handle, .iap-track.dragging .handle { transform: scale(1.08); }
-  .iap-track:focus-visible .handle { border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,136,0,.35); }
-  /* Stop dots: orange before the handle, gray (soft white ring) after it; none at the first stop */
+  .iap-track:focus-visible .handle { border-radius: 50%; box-shadow: 0 0 0 3px rgba(3,173,226,.35); }
+  /* Stop dots: blue before the handle, gray (soft white ring) after it; none at the first stop */
   .iap-track .dots i {
     position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
     background: #b9b9b9; box-shadow: 0 0 0 1px rgba(255,255,255,.6);
     transition: background-color .18s ease, box-shadow .18s ease, opacity .18s ease;
   }
-  .iap-track .dots i.is-passed { background: #ff8800; box-shadow: none; }
+  .iap-track .dots i.is-passed { background: var(--c-brand); box-shadow: none; }
   .iap-track .dots i.is-current, .iap-track .dots i:first-child, .iap-track .dots i.is-covered { opacity: 0; }
   /* Credits tooltip — always visible, follows the handle */
   .iap-track .handle-tip {
@@ -124,7 +123,7 @@
     position: absolute; z-index: 2; top: 12px; left: var(--pos); margin-left: -15.75px; width: 42px; height: 42px;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); opacity: 0; pointer-events: none;
   }
-  .iap-track .hint-trail { z-index: 1; left: 4px; width: 0; opacity: 0; background: linear-gradient(90deg, rgba(255,136,0,0) 0%, rgba(255,165,28,.25) 40%, #ff8800 100%); }
+  .iap-track .hint-trail { z-index: 1; left: 4px; width: 0; opacity: 0; background: linear-gradient(90deg, rgba(3,173,226,0) 0%, rgba(3,173,226,.25) 40%, var(--c-brand) 100%); }
   .iap-track.hinting .swipe-hint { animation: iapSwipe 2.4s ease-in-out 2; }
   .iap-track.hinting .hint-trail { animation: iapTrail 2.4s ease-in-out 2; }
   @keyframes iapSwipe {
@@ -275,7 +274,7 @@
                 <div class="bar"></div><div class="hint-trail"></div><div class="progress"></div>
                 <div class="dots" id="iapDots" aria-hidden="true"></div>
                 <img class="swipe-hint" src="assets/finger-pointer.svg" alt="" width="42" height="42" draggable="false">
-                <img class="handle" src="assets/handle-orange.svg" alt="" width="26" height="26" draggable="false">
+                <img class="handle" src="assets/handle-blue.svg" alt="" width="26" height="26" draggable="false">
                 <span class="handle-tip" aria-hidden="true"><img src="assets/coin.svg" alt="" width="16" height="16"><span id="iapTip">300 credits</span></span>
               </div>
               <div class="iap-ticks" id="iapTicks"></div>
