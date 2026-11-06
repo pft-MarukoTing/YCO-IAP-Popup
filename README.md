@@ -14,11 +14,19 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 | 3 | 月均價 | Yearly：年費 ÷ 12，劃線為月訂價；Monthly：月訂價 |
 | 4 | 年訂閱總價 · 每月點數 | Plus 固定 100；Pro 跟著 slider |
 | 5 | Pro 點數 slider | 300 / 800 / 1,500 / 2,500 / 5,000 / 10,000，月均價、年總價、點數同步更新。UI 同 pricing page（藍色軌道＋刻度點、點數 tooltip、開啟時的手指滑動提示） |
-| 6 | Check list | Pro 與 Plus 各一組，第一列點數跟著方案 |
+| 6 | Check list | Plus 4 項、Pro 7 項（依「Plus/Pro 方案敘述」），Pro 第一列點數跟著 slider |
 | 7 | View Full Feature Comparison | 開 Pricing Page — Subscription tab |
 | 8 | Buy Credits | 開 Pricing Page — Pay as you go tab |
 
-價格與 tier 取自 pricing page prototype（`discount=off`，USD）。設定都在 `src/iap-popup.html` 的 script 開頭（`PLUS`、`TIERS`、`LINKS`）。
+價格依 PM 文件「Pro Plan with more credit pack - Pricing」（YCO Proposal 2，USD），Pro Yearly 預設 300 credits/month（$95.99）：
+
+| | Plus | Pro 300 | 800 | 1,500 | 2,500 | 5,000 | 10,000 |
+|---|---|---|---|---|---|---|---|
+| Monthly | $9.99 | $19.99 | $34.99 | $59.99 | $89.99 | $164.99 | $319.99 |
+| Yearly | $39.99 | $95.99 | $249.99 | $429.99 | $649.99 | $1,199.99 | $2,399.99 |
+| Yearly/12 | $3.33 | $7.99 | $20.83 | $35.83 | $54.17 | $99.99 | $199.99 |
+
+方案敘述 Monthly / Yearly 相同；Pro 第一列點數跟著 slider。設定都在 `src/iap-popup.html` 的 script 開頭（`PLUS`、`TIERS`、`LINKS`）。
 
 ## RWD
 

@@ -166,8 +166,6 @@
   .iap-feat b { color: var(--c-brand); font-weight: 700; }
   .iap-ck { width: 22px; height: 22px; border-radius: 50%; background: var(--c-brand); display: grid; place-items: center; flex-shrink: 0; margin-top: 0; }
   .iap-ck svg { width: 12px; height: 12px; }
-  .iap-minus { width: 22px; height: 22px; border-radius: 50%; background: var(--c-line); color: var(--c-text-3); display: grid; place-items: center; flex-shrink: 0; font-weight: 700; }
-  .iap-feat .iap-up { color: var(--c-brand) !important; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 
   .iap-agent { margin-top: 16px; border: 1px solid var(--c-line); background: #FAFBFC; border-radius: 12px; padding: 6px 16px; }
   .iap-agent-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 14.5px; color: var(--c-text-2); }
@@ -220,7 +218,7 @@
     .iap-incl { padding: 16px 18px 16px; }
     .iap-incl-head h3 { font-size: 17px; }
     .iap-feat li { font-size: 14.5px; padding: 8px 10px; gap: 10px; }
-    .iap-ck, .iap-minus { width: 20px; height: 20px; }
+    .iap-ck { width: 20px; height: 20px; }
     .iap-foot { padding: 10px 18px calc(12px + env(safe-area-inset-bottom)); }
     .iap-cta { height: 48px; font-size: 16px; }
     .iap-buy { padding: 10px 0 4px; font-size: 14.5px; }
@@ -312,15 +310,17 @@
 <script>
 (function () {
   // ── Config ────────────────────────────────────────────────
-  // Prices (USD) from the YCO pricing page prototype (discount=off).
-  var PLUS  = { c: 100, y: 3.33, m: 9.99 };
+  // Prices (USD) — PM doc "Pro Plan with more credit pack - Pricing" (YCO Proposal 2).
+  // c = credits / month, m = monthly price, y = yearly price, mo = yearly price / 12 as shown on the UI.
+  // Pro defaults to the 300-credit tier.
+  var PLUS  = { c: 100, m: 9.99, y: 39.99, mo: 3.33 };
   var TIERS = [
-    { c: 300,   y: 7.99,   m: 19.99  },
-    { c: 800,   y: 20.83,  m: 34.99  },
-    { c: 1500,  y: 35.83,  m: 59.99  },
-    { c: 2500,  y: 54.17,  m: 89.99  },
-    { c: 5000,  y: 99.99,  m: 164.99 },
-    { c: 10000, y: 199.99, m: 319.99 }
+    { c: 300,   m: 19.99,  y: 95.99,   mo: 7.99   },
+    { c: 800,   m: 34.99,  y: 249.99,  mo: 20.83  },
+    { c: 1500,  m: 59.99,  y: 429.99,  mo: 35.83  },
+    { c: 2500,  m: 89.99,  y: 649.99,  mo: 54.17  },
+    { c: 5000,  m: 164.99, y: 1199.99, mo: 99.99  },
+    { c: 10000, m: 319.99, y: 2399.99, mo: 199.99 }
   ];
   var PRICING_URL = 'https://pricing-page-optimization.vercel.app/?discount=off';
   var LINKS = {
@@ -332,12 +332,12 @@
 
   var state = { plan: 'pro', yearly: true, tier: 0 };
   var $ = function (id) { return document.getElementById(id); };
-  var money = function (n) { return '$' + n.toFixed(2); };
+  var money = function (n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   var num = function (n) { return n.toLocaleString('en-US'); };
-  var yearTotal = function (p) { return Math.round(p.y * 12 * 100) / 100; };
+  var yearTotal = function (p) { return p.y; };
   // 1. Discount % = 1 − yearly price / (monthly price × 12)
   var discount = function (p) { return 1 - yearTotal(p) / (p.m * 12); };
-  // Badge shows the Pro plan's highest discount (best Pro tier).
+  // Badge shows the Pro plan's highest discount (the 300-credit default tier: 60% off).
   var maxOff = Math.round(Math.max.apply(null, TIERS.map(discount)) * 100);
 
   var CK = '<span class="iap-ck"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
@@ -374,13 +374,13 @@
     $('iapPro').setAttribute('aria-checked', state.plan === 'pro');
 
     // 3–4. Plus
-    $('iapPlusPrice').textContent = money(y ? PLUS.y : PLUS.m);
+    $('iapPlusPrice').textContent = money(y ? PLUS.mo : PLUS.m);
     $('iapPlusStrike').textContent = money(PLUS.m) + '/mo';
     $('iapPlusStrike').hidden = !y;
     $('iapPlusSub').textContent = (y ? 'Billed ' + money(yearTotal(PLUS)) + '/year' : 'Billed monthly') + ' · 100 Credits / month';
 
     // 3–5. Pro (follows the slider)
-    $('iapProPrice').textContent = money(y ? t.y : t.m);
+    $('iapProPrice').textContent = money(y ? t.mo : t.m);
     $('iapProStrike').textContent = money(t.m) + '/mo';
     $('iapProStrike').hidden = !y;
     $('iapProSub').innerHTML = (y ? 'Billed ' + money(yearTotal(t)) + '/year' : 'Billed monthly') + ' · <strong>' + num(t.c) + ' Credits / month</strong>';
@@ -403,7 +403,7 @@
         li('<b>' + num(t.c) + ' Credits</b> / per month') +
         li('Watermark-free, High-quality Downloads') +
         li('Batch Photo Editing') +
-        li('100 GB Cloud Storage') +
+        li('<b>100 GB</b> Cloud Storage') +
         li('<b>Daily FREE</b> AI Agent Chats for Quick Edits') +
         li('<b>40% OFF</b> Additional Credit Purchases') +
         li('Commercial Use Rights Included');
@@ -413,9 +413,7 @@
         li('<b>100 Credits</b> / per month') +
         li('Watermark-free, High-quality Downloads') +
         li('Batch Photo Editing') +
-        li('10 GB Cloud Storage') +
-        '<li><span class="iap-minus">–</span><span>Want more credits, Daily FREE AI Agent chats &amp; Commercial License? <button type="button" class="iap-up" id="iapToPro">Upgrade to Pro</button></span></li>';
-      $('iapToPro').addEventListener('click', function () { state.plan = 'pro'; render(); });
+        li('<b>10 GB</b> Cloud Storage');
     }
 
     // Fine print
