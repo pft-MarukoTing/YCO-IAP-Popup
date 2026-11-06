@@ -82,18 +82,70 @@
   .iap-sub { font-size: 13.5px; color: var(--c-text-3); margin-top: 2px; }
   .iap-sub strong { color: var(--c-text); font-weight: 600; }
 
-  /* Credit slider (Pro) */
-  .iap-slider { margin-top: 14px; cursor: default; }
-  .iap-slider-label { font-size: 13.5px; color: var(--c-text-3); margin-bottom: 6px; }
-  .iap-range {
-    -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; margin: 10px 0 8px;
-    background: var(--c-fill); outline: none; cursor: pointer;
+  /* Credit slider (Pro) — ported from the pricing page (pft-MarukoTing/pricing-page-optimization) */
+  .iap-slider {
+    margin-top: 14px; cursor: default;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 34px 16px 12px; border: 2px solid rgba(255,136,0,.2); border-radius: 16px; background: rgba(255,136,0,.05);
+    --pro-gradient: linear-gradient(88.46deg, #ffb802 0%, #ffa51c 32.565%, #ff8800 99.797%);
   }
-  .iap-range::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 3px solid var(--c-brand); box-shadow: 0 2px 6px rgba(3,173,226,.35); cursor: grab; }
-  .iap-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--c-brand); box-shadow: 0 2px 6px rgba(3,173,226,.35); cursor: grab; }
-  .iap-ticks { display: flex; justify-content: space-between; }
-  .iap-ticks button { font-size: 13.5px; color: var(--c-text-3) !important; padding: 4px 2px; font-variant-numeric: tabular-nums; }
-  .iap-ticks button[aria-current="true"] { color: var(--c-brand) !important; font-weight: 700; }
+  .iap-track { position: relative; height: 26px; touch-action: none; cursor: pointer; outline: none; --pos: 8px; }
+  .iap-track .bar, .iap-track .progress, .iap-track .hint-trail { position: absolute; top: 50%; height: 6px; margin-top: -3px; border-radius: 19px; }
+  .iap-track .bar { left: 4px; right: 4px; background: rgba(17,24,26,.2); }
+  .iap-track .progress { left: 4px; width: calc(var(--pos) - 4px); background: var(--pro-gradient); }
+  .iap-track .handle { position: absolute; z-index: 1; top: 0; left: var(--pos); width: 26px; height: 26px; margin-left: -13px; transition: transform .15s; }
+  .iap-track:not(.dragging) .progress { transition: width .18s ease; }
+  .iap-track:not(.dragging) .handle { transition: left .18s ease, transform .15s; }
+  .iap-track:hover .handle, .iap-track.dragging .handle { transform: scale(1.08); }
+  .iap-track:focus-visible .handle { border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,136,0,.35); }
+  /* Stop dots: orange before the handle, gray (soft white ring) after it; none at the first stop */
+  .iap-track .dots i {
+    position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+    background: #b9b9b9; box-shadow: 0 0 0 1px rgba(255,255,255,.6);
+    transition: background-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+  }
+  .iap-track .dots i.is-passed { background: #ff8800; box-shadow: none; }
+  .iap-track .dots i.is-current, .iap-track .dots i:first-child, .iap-track .dots i.is-covered { opacity: 0; }
+  /* Credits tooltip — always visible, follows the handle */
+  .iap-track .handle-tip {
+    position: absolute; z-index: 3; bottom: calc(100% + 6px); left: var(--pos); transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 8px;
+    background: #fff; color: rgba(9,22,26,.95); font-size: 14px; line-height: 20px; font-weight: 600; white-space: nowrap;
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,.16)); pointer-events: none;
+  }
+  .iap-track .handle-tip img { flex: none; width: 16px; height: 16px; }
+  .iap-track .handle-tip::after {
+    content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
+    border: 6px solid transparent; border-bottom: 0; border-top-color: #fff;
+  }
+  .iap-track:not(.dragging) .handle-tip { transition: left .18s ease; }
+  /* Swipe hint: a finger drags across the stops; plays when the popup opens, stops on interaction */
+  .iap-track .swipe-hint {
+    position: absolute; z-index: 2; top: 12px; left: var(--pos); margin-left: -15.75px; width: 42px; height: 42px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); opacity: 0; pointer-events: none;
+  }
+  .iap-track .hint-trail { z-index: 1; left: 4px; width: 0; opacity: 0; background: linear-gradient(90deg, rgba(255,136,0,0) 0%, rgba(255,165,28,.25) 40%, #ff8800 100%); }
+  .iap-track.hinting .swipe-hint { animation: iapSwipe 2.4s ease-in-out 2; }
+  .iap-track.hinting .hint-trail { animation: iapTrail 2.4s ease-in-out 2; }
+  @keyframes iapSwipe {
+    0%   { opacity: 0; left: 8px; transform: scale(1); }
+    10%  { opacity: 1; left: 8px; transform: scale(.92); }
+    60%  { opacity: 1; left: calc(100% - 8px); transform: scale(.92); animation-timing-function: linear; }
+    70%  { opacity: 0; left: calc(100% - 8px); transform: scale(1); }
+    100% { opacity: 0; left: 8px; }
+  }
+  @keyframes iapTrail {
+    0%   { opacity: 0; width: 4px; }
+    10%  { opacity: 1; width: 4px; }
+    60%  { opacity: 1; width: calc(100% - 12px); animation-timing-function: linear; }
+    70%  { opacity: 0; width: calc(100% - 12px); }
+    100% { opacity: 0; width: 4px; }
+  }
+  .iap-ticks { display: flex; align-items: center; gap: 4px; font-size: 13px; line-height: 16px; color: rgba(17,24,26,.45); }
+  .iap-ticks button { padding: 0; color: inherit !important; flex: 1 1 0; min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
+  .iap-ticks button:first-child { flex: 0 0 36px; text-align: left; }
+  .iap-ticks button:last-child { flex: 0 0 40px; text-align: right; }
+  .iap-ticks button[aria-current="true"], .iap-ticks button:hover { color: rgba(9,22,26,.95) !important; }
 
   /* ── Footer CTA ──────────────────────────────────────── */
   .iap-cta {
@@ -219,8 +271,13 @@
             <div class="iap-price-row"><span class="iap-price" id="iapProPrice">$7.99</span><span class="iap-per">/mo</span><span class="iap-strike" id="iapProStrike">$19.99/mo</span></div>
             <div class="iap-sub" id="iapProSub">Billed $95.88/year · <strong>300 Credits / month</strong></div>
             <div class="iap-slider" id="iapSlider">
-              <div class="iap-slider-label" id="iapSliderLabel">Monthly credits</div>
-              <input class="iap-range" id="iapRange" type="range" min="0" max="5" step="1" value="0" aria-labelledby="iapSliderLabel">
+              <div class="iap-track" id="iapTrack" role="slider" tabindex="0" aria-label="Monthly credits" aria-valuemin="300" aria-valuemax="10000">
+                <div class="bar"></div><div class="hint-trail"></div><div class="progress"></div>
+                <div class="dots" id="iapDots" aria-hidden="true"></div>
+                <img class="swipe-hint" src="assets/finger-pointer.svg" alt="" width="42" height="42" draggable="false">
+                <img class="handle" src="assets/handle-orange.svg" alt="" width="26" height="26" draggable="false">
+                <span class="handle-tip" aria-hidden="true"><img src="assets/coin.svg" alt="" width="16" height="16"><span id="iapTip">300 credits</span></span>
+              </div>
               <div class="iap-ticks" id="iapTicks"></div>
             </div>
           </div>
@@ -300,9 +357,13 @@
   TIERS.forEach(function (t, i) {
     var b = document.createElement('button');
     b.type = 'button'; b.textContent = num(t.c); b.setAttribute('aria-label', num(t.c) + ' credits per month');
-    b.addEventListener('click', function (e) { e.stopPropagation(); setTier(i); });
+    b.tabIndex = -1;
+    b.addEventListener('click', function (e) { e.stopPropagation(); stopHint(); setTier(i); });
     $('iapTicks').appendChild(b);
   });
+  // Handle centre sits on the tick centres: 8px from each edge, equal gaps.
+  var posFor = function (i) { return 'calc(8px + (100% - 16px) * ' + (i / (TIERS.length - 1)) + ')'; };
+  $('iapDots').innerHTML = TIERS.map(function (_, i) { return '<i style="left:' + posFor(i) + '"></i>'; }).join('');
 
   function setTier(i) { state.tier = i; state.plan = 'pro'; render(); }
 
@@ -325,10 +386,14 @@
     $('iapProStrike').hidden = !y;
     $('iapProSub').innerHTML = (y ? 'Billed ' + money(yearTotal(t)) + '/year' : 'Billed monthly') + ' · <strong>' + num(t.c) + ' Credits / month</strong>';
 
-    var r = $('iapRange'), pct = state.tier / (TIERS.length - 1) * 100;
-    r.value = state.tier;
-    r.setAttribute('aria-valuetext', num(t.c) + ' credits per month');
-    r.style.background = 'linear-gradient(90deg, #03ADE2 0%, #4CD137 ' + pct + '%, #F2F5F8 ' + pct + '%)';
+    var track = $('iapTrack');
+    track.style.setProperty('--pos', posFor(state.tier));
+    track.setAttribute('aria-valuenow', t.c);
+    track.setAttribute('aria-valuetext', num(t.c) + ' credits per month');
+    $('iapTip').textContent = num(t.c) + ' credits';
+    Array.prototype.forEach.call($('iapDots').children, function (d, i) {
+      d.classList.toggle('is-passed', i < state.tier); d.classList.toggle('is-current', i === state.tier);
+    });
     Array.prototype.forEach.call($('iapTicks').children, function (b, i) { b.setAttribute('aria-current', i === state.tier); });
 
     // 6. Check list
@@ -365,7 +430,49 @@
   $('iapPlus').addEventListener('click', function () { state.plan = 'plus'; render(); });
   $('iapPro').addEventListener('click', function (e) { if (e.target.closest('.iap-slider')) return; state.plan = 'pro'; render(); });
   $('iapSlider').addEventListener('click', function () { if (state.plan !== 'pro') { state.plan = 'pro'; render(); } });
-  $('iapRange').addEventListener('input', function (e) { setTier(+e.target.value); });
+  // Slider: drag / click snaps to the nearest stop; arrow keys, Home, End
+  var trackEl = $('iapTrack');
+  function indexFromPointer(e) {
+    var r = trackEl.getBoundingClientRect();
+    var ratio = (e.clientX - r.left - 8) / (r.width - 16);
+    return Math.round(Math.max(0, Math.min(1, ratio)) * (TIERS.length - 1));
+  }
+  trackEl.addEventListener('pointerdown', function (e) {
+    stopHint(); trackEl.setPointerCapture(e.pointerId); trackEl.classList.add('dragging'); setTier(indexFromPointer(e));
+  });
+  trackEl.addEventListener('pointermove', function (e) {
+    if (!trackEl.hasPointerCapture(e.pointerId)) return;
+    var i = indexFromPointer(e); if (i !== state.tier) setTier(i);
+  });
+  ['pointerup', 'pointercancel'].forEach(function (ev) { trackEl.addEventListener(ev, function () { trackEl.classList.remove('dragging'); }); });
+  trackEl.addEventListener('keydown', function (e) {
+    var map = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }, last = TIERS.length - 1;
+    if (e.key in map) setTier(Math.max(0, Math.min(last, state.tier + map[e.key])));
+    else if (e.key === 'Home') setTier(0);
+    else if (e.key === 'End') setTier(last);
+    else return;
+    e.preventDefault(); stopHint();
+  });
+
+  // Swipe hint: a finger drags across the stops when the popup opens; any interaction stops it.
+  // While the trail is visible, dots it has reached are hidden so the gradient reads as one fill.
+  var trail = trackEl.querySelector('.hint-trail'), dotsEl = $('iapDots');
+  function coverDots() {
+    var on = trackEl.classList.contains('hinting');
+    var shown = on && parseFloat(getComputedStyle(trail).opacity) > 0.4;
+    var end = trail.getBoundingClientRect().right;
+    Array.prototype.forEach.call(dotsEl.children, function (d) {
+      var r = d.getBoundingClientRect();
+      d.classList.toggle('is-covered', shown && end >= r.left + r.width / 2);
+    });
+    if (on) requestAnimationFrame(coverDots);
+  }
+  function stopHint() { trackEl.classList.remove('hinting'); }
+  function playHint() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    stopHint(); void trackEl.offsetWidth; trackEl.classList.add('hinting'); requestAnimationFrame(coverDots);
+  }
+  trackEl.querySelector('.swipe-hint').addEventListener('animationend', stopHint);
   ['iapPlus', 'iapPro'].forEach(function (id) {
     $(id).addEventListener('keydown', function (e) {
       if (e.target !== e.currentTarget) return;
@@ -391,8 +498,10 @@
     document.body.style.overflow = 'hidden';
     $('iapScroll').scrollTop = 0;
     setTimeout(function () { $('iapClose').focus({ preventScroll: true }); }, 30);
+    setTimeout(playHint, MOBILE.matches ? 700 : 450);
   };
   function finishClose() {
+    stopHint();
     overlay.classList.remove('open', 'closing'); overlay.setAttribute('aria-hidden', 'true');
     modal.style.transform = ''; modal.style.removeProperty('--drag-y');
     document.body.style.overflow = '';

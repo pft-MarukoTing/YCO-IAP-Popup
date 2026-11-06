@@ -13,7 +13,7 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 | 2 | Plus / Pro 選項 | Radio card，可鍵盤操作 |
 | 3 | 月均價 | Yearly：年費 ÷ 12，劃線為月訂價；Monthly：月訂價 |
 | 4 | 年訂閱總價 · 每月點數 | Plus 固定 100；Pro 跟著 slider |
-| 5 | Pro 點數 slider | 300 / 800 / 1,500 / 2,500 / 5,000 / 10,000，月均價、年總價、點數同步更新 |
+| 5 | Pro 點數 slider | 300 / 800 / 1,500 / 2,500 / 5,000 / 10,000，月均價、年總價、點數同步更新。UI 同 pricing page（橘色軌道＋刻度點、點數 tooltip、開啟時的手指滑動提示） |
 | 6 | Check list | Pro 與 Plus 各一組，第一列點數跟著方案 |
 | 7 | View Full Feature Comparison | 開 Pricing Page — Subscription tab |
 | 8 | Buy Credits | 開 Pricing Page — Pay as you go tab |
@@ -32,7 +32,7 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 - `src/iap-popup.html`：彈窗元件（CSS + HTML + JS）
 - `src/yce-home-snapshot.html`：官網首頁快照
 - `src/build.py`：組合成 `index.html` → `python3 src/build.py`
-- `assets/`：官網 icon 字型的本地副本（官網 CDN 不允許跨網域載入字型）
+- `assets/`：官網 icon 字型的本地副本（官網 CDN 不允許跨網域載入字型），以及 slider 用的 `handle-orange.svg`、`coin.svg`、`finger-pointer.svg`（來自 pricing-page-optimization）
 
 ## 本機預覽
 
