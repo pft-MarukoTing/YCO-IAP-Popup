@@ -48,6 +48,41 @@ TRIGGER = '''
 </script>
 '''
 
+# Holiday theme switcher (bottom-right) for reviewing the holiday UIs.
+# Hidden by default: the page always shows the default popup. Add ?review=1 to the URL to get the switcher and the
+# holiday themes (?review=1&holiday=christmas opens a theme directly). Sets data-holiday on #iapOverlay ("" = default).
+HOLIDAYS = [('', 'Default'), ('christmas', 'Christmas'), ('year-end', 'Year End'), ('halloween', 'Halloween'), ('black-friday', 'Black Friday'), ('golden-week', 'Golden Week')]
+HOLIDAY_SWITCH = (
+    '<style>'
+    '.proto-holiday{display:none}html.proto-review .proto-holiday{position:fixed;right:16px;bottom:16px;z-index:2147483600;display:flex;gap:2px;padding:3px;max-width:calc(100vw - 32px);overflow-x:auto;scrollbar-width:none;'
+    'border-radius:20px;background:rgba(21,23,31,.82);font:600 13px/1 Roboto,system-ui,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.2)}'
+    '.proto-holiday::-webkit-scrollbar{display:none}'
+    '.proto-holiday button{flex-shrink:0;padding:6px 12px;border:0;border-radius:16px;background:none;color:#fff;font:inherit;opacity:.7;cursor:pointer;white-space:nowrap}'
+    '.proto-holiday button:hover{opacity:1}'
+    '.proto-holiday button[aria-pressed=true]{background:#fff;color:#15171F;opacity:1}'
+    # Phone: the sheet fills the screen, so lift its bottom edge to make room for the switcher instead of covering Buy Credits
+    '@media (max-width:599px){.proto-holiday{right:8px;bottom:calc(8px + env(safe-area-inset-bottom));max-width:calc(100vw - 16px);font-size:12px}.proto-holiday button{padding:5px 9px}'
+    'html.proto-review #iapOverlay{padding-bottom:calc(48px + env(safe-area-inset-bottom)) !important}}'
+    '</style>'
+    '<nav class="proto-holiday" aria-label="Holiday theme">'
+    + ''.join(f'<button type="button" data-holiday="{k}" aria-pressed="false">{label}</button>' for k, label in HOLIDAYS) +
+    '</nav>'
+    '<script>(function () {'
+    '  var q = new URLSearchParams(location.search);'
+    '  if (q.get("review") !== "1") return;'   # not in review mode: no switcher, no holiday theme
+    '  document.documentElement.classList.add("proto-review");'
+    '  var overlay = document.getElementById("iapOverlay"), btns = document.querySelectorAll(".proto-holiday button");'
+    '  function apply(h) {'
+    '    if (h) overlay.setAttribute("data-holiday", h); else overlay.removeAttribute("data-holiday");'
+    '    btns.forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.holiday === h); });'
+    '    var url = new URL(location.href); if (h) url.searchParams.set("holiday", h); else url.searchParams.delete("holiday"); history.replaceState(null, "", url);'
+    '  }'
+    '  btns.forEach(function (b) { b.addEventListener("click", function () { apply(b.dataset.holiday); }); });'
+    '  var start = q.get("holiday") || "";'
+    '  apply([].some.call(btns, function (b) { return b.dataset.holiday === start; }) ? start : "");'
+    '})();</script>'
+)
+
 def once(s, a, b):
     assert s.count(a) >= 1, a[:60]
     return s.replace(a, b, 1)
@@ -57,7 +92,7 @@ out = snapshot
 out = once(out, '<title>', '<title>[Prototype] IAP Popup · ')
 out = once(out, '</head>', HEAD + '</head>')
 out = once(out, '<div class="headers_container__LC81Q">', HEADER + '<div class="headers_container__LC81Q proto-dt-header">')
-out = once(out, '</body>', popup + TRIGGER + '</body>')
+out = once(out, '</body>', popup + TRIGGER + HOLIDAY_SWITCH + '</body>')
 (ROOT / 'index.html').write_text(out, encoding='utf-8')
 print('built index.html', len(out))
 

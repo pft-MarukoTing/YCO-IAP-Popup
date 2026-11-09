@@ -296,6 +296,142 @@
   /* Yearly badge: solid pink while Monthly is selected; soft pink fill + pink text once Yearly is selected */
   .iap-save { transition: background-color .15s, color .15s, border-color .15s; }
   #iapYearly[aria-pressed="true"] .iap-save { background: rgba(242,59,119,.08); color: #F23B77; border-color: transparent; }
+
+  /* ══ Holiday themes ═══════════════════════════════════════════════════
+     The prototype's switcher sets #iapOverlay[data-holiday]; the script adds .has-holiday for themes that are built.
+     Layout follows the earlier holiday popups (Figma YCO_Content (Product Pages): Christmas 2626:24196 / 2626:24433,
+     Year End 2791:52209 / 2791:52451, Halloween 975:37509 / 975:37749, Black Friday 977:22835 / 2598:50148):
+     desktop = illustrated right panel with countdown + "Flash Sales / UP TO 50% off" + features in a white card;
+     tablet & phone = compact banner under the title.
+     Each theme only sets the variables below. */
+  #iapOverlay[data-holiday="christmas"] {
+    --hol-panel: #019049 url(assets/christmas/bg-panel.png?v=2) center top / cover no-repeat;
+    --hol-banner: #019049 url(assets/christmas/bg-banner.png) center / cover no-repeat;
+    --hol-tint: rgba(1,144,73,.05);   /* panel green #019049 (sampled from bg-panel.png) at 5% */
+    --hol-tint-solid: #F2F9F6;        /* same over white, opaque */
+    --hol-deal: linear-gradient(140deg, #fff 27.35%, #E7E3E3 48.34%, #fff 62.77%, #BBBAB9 85.21%, #8C8785 102.9%); /* metallic */
+    --hol-title: #fff;
+    --hol-count: #fff; --hol-count-bg: transparent; --hol-count-border: #fff;
+    --hol-card-shadow: rgba(0,60,30,.18);
+    --hol-compare-border: #fff;
+  }
+  #iapOverlay[data-holiday="year-end"] {
+    --hol-panel: #EAFBFD url(assets/year-end/bg-panel.png) center top / cover no-repeat;
+    --hol-banner: #E6F9FC url(assets/year-end/bg-banner.png) center / cover no-repeat;
+    --hol-tint: rgba(3,173,226,.05);  /* the panel is near-white, so tint with the theme accent #03ADE2 at 5% */
+    --hol-tint-solid: #F2FBFE;
+    --hol-deal: linear-gradient(90deg, #03ADE2, #3FD75B);
+    --hol-title: #0080A9;
+    --hol-count: #03ADE2; --hol-count-bg: #fff; --hol-count-border: #03ADE2;
+    --hol-card-shadow: rgba(3,120,160,.14);
+    --hol-compare-border: var(--c-line);   /* light panel: keep the button's outline */
+  }
+  .iap-hol { display: none; }
+  .iap-incl-card { display: contents; }
+  #iapOverlay[data-holiday="halloween"] {
+    --hol-panel: #8E1CBB url(assets/halloween/bg-panel.png) center top / cover no-repeat;
+    --hol-banner: #8E1CBB url(assets/halloween/bg-banner.png) center / cover no-repeat;
+    --hol-tint: rgba(142,28,187,.05);  /* panel purple #8E1CBB (sampled from bg-panel.png) at 5% */
+    --hol-tint-solid: #F9F4FC;
+    --hol-deal: linear-gradient(90deg, #FFAB23, #FF8D23);
+    --hol-title: #fff;
+    --hol-count: #fff; --hol-count-bg: transparent; --hol-count-border: #fff;
+    --hol-card-shadow: rgba(70,0,100,.22);
+    --hol-compare-border: #fff;
+  }
+  #iapOverlay[data-holiday="black-friday"] {
+    --hol-panel: #050505 url(assets/black-friday/bg-panel.png) center top / cover no-repeat;
+    --hol-banner: #050505 url(assets/black-friday/bg-banner.png) center / cover no-repeat;
+    --hol-tint: rgba(5,5,5,.05);      /* panel black at 5% */
+    --hol-tint-solid: #F2F2F2;
+    --hol-deal: linear-gradient(90deg, #E4C684 10.5%, #CAA140 53.21%, #E4C684 91%); /* gold */
+    --hol-title: #fff;
+    --hol-count: #fff; --hol-count-bg: transparent; --hol-count-border: #fff;
+    --hol-card-shadow: rgba(0,0,0,.45);
+    --hol-compare-border: #fff;
+  }
+  /* "UP TO 50% off" text fill (Figma "OBJECTS") */
+  .iap-hol-deal > span, .iap-hol-pct > span {
+    background-image: var(--hol-deal);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .iap-hol-count { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--hol-count-border); border-radius: 62.5px;
+    background: var(--hol-count-bg); color: var(--hol-count); font-size: 14px; line-height: 22.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .iap-hol-ic { display: block; width: 20px; height: 20px; background: currentColor;
+    -webkit-mask: url(assets/ic-timer.svg) center / contain no-repeat; mask: url(assets/ic-timer.svg) center / contain no-repeat; }
+  .iap-hol-title { color: var(--hol-title); font-weight: 700; letter-spacing: .01em; }
+  .iap-hol-deal { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 900; white-space: nowrap; }
+  .iap-hol-num { letter-spacing: -0.02em; }
+  .iap-hol-pct { display: flex; flex-direction: column; justify-content: center; line-height: normal; }
+
+  #iapOverlay.has-holiday .iap-hol { display: flex; }
+  /* Monthly / Yearly track in Fill/Weak (Grey slate 4%) so the holiday tint shows through */
+  #iapOverlay.has-holiday .iap-toggle { background: rgba(17,24,26,.04); }
+  /* Holiday popups drop the AI Agent links */
+  #iapOverlay.has-holiday .iap-agent { display: none; }
+  #iapOverlay .iap-incl-card::-webkit-scrollbar { display: none; }
+
+  /* Desktop: the whole right column becomes the holiday panel */
+  @media (min-width: 900px) {
+    /* Panel is a fixed column: hero and comparison button stay put, the white card scrolls when the screen is short */
+    #iapOverlay.has-holiday .iap-incl { display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+      position: relative; padding: 52px 28px 28px;
+      background: var(--hol-panel); }
+    #iapOverlay.has-holiday .iap-incl-head { display: none; }
+    /* Left column: the theme tint at 5% */
+    #iapOverlay.has-holiday .iap-main, #iapOverlay.has-holiday .iap-foot { background: var(--hol-tint); }
+    #iapOverlay.has-holiday .iap-hol { flex-direction: column; align-items: center; gap: 4px; margin-bottom: 16px; text-align: center; }
+    #iapOverlay.has-holiday .iap-hol-text { display: flex; flex-direction: column; align-items: center; }
+    #iapOverlay.has-holiday .iap-hol-title { font-size: 40px; line-height: normal; }
+    #iapOverlay.has-holiday .iap-hol-upto { font-size: 22px; }
+    #iapOverlay.has-holiday .iap-hol-num { font-size: 104px; line-height: 104px; }
+    #iapOverlay.has-holiday .iap-hol-pct > span:first-child { font-size: 45px; }
+    #iapOverlay.has-holiday .iap-hol-pct > span:last-child { font-size: 22px; }
+    /* Features + AI Agent links in a white card (Figma 2626:24222) */
+    #iapOverlay.has-holiday .iap-hol, #iapOverlay.has-holiday .iap-compare { flex-shrink: 0; }
+    #iapOverlay.has-holiday .iap-incl-card { display: block; flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain;
+      padding: 12px; border-radius: 20px;
+      background: linear-gradient(180deg, #fff 51.77%, #F3FFF6 100%); box-shadow: 0 8px 24px var(--hol-card-shadow); }
+    #iapOverlay.has-holiday .iap-feat li { padding: 7px 12px; font-size: 15px; }
+    #iapOverlay.has-holiday .iap-compare { margin-top: 12px; background: #fff; border-color: var(--hol-compare-border); }
+    #iapOverlay.has-holiday .iap-compare:hover { background: #F3FFF6; border-color: var(--hol-compare-border); }
+    /* Close button sits on the illustration: white disc */
+    #iapOverlay.has-holiday .iap-close { background: rgba(255,255,255,.92) !important; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    #iapOverlay.has-holiday .iap-close:hover { background: #fff !important; }
+  }
+
+  /* Tablet & phone: compact banner under the title (Figma 2626:24440) */
+  @media (max-width: 899px) {
+    /* Sheet: theme tint at the top fading to white at the bottom. The first 100px stay solid so the pinned tabs (phone)
+       can use the same solid tint; the gradient is white by 65%, so the footer stays plain white. */
+    #iapOverlay.has-holiday .iap-modal { background: linear-gradient(180deg, var(--hol-tint-solid) 0, var(--hol-tint-solid) 100px, #fff 65%); }
+    #iapOverlay.has-holiday .iap-main { background: transparent; }
+    #iapOverlay.has-holiday .iap-foot { background: #fff; }
+    #iapOverlay.has-holiday .iap-hol { flex-direction: row-reverse; align-items: center; justify-content: center; gap: 8px;
+      margin: 0 0 14px; padding: 10px 16px; border-radius: 12px; overflow: hidden;
+      background: var(--hol-banner); }
+    #iapOverlay.has-holiday .iap-hol-text { display: contents; }
+    #iapOverlay.has-holiday .iap-hol-count { position: relative; }
+    #iapOverlay.has-holiday .iap-hol-title { order: 2; font-size: 18px; }
+    /* right column: "Flash Sales" over the countdown */
+    #iapOverlay.has-holiday .iap-hol { display: grid; grid-template-columns: auto auto; grid-template-areas: "deal title" "deal count"; column-gap: 12px; row-gap: 4px; }
+    #iapOverlay.has-holiday .iap-hol-deal { grid-area: deal; }
+    #iapOverlay.has-holiday .iap-hol-title { grid-area: title; text-align: center; }
+    #iapOverlay.has-holiday .iap-hol-count { grid-area: count; justify-self: center; }
+    #iapOverlay.has-holiday .iap-hol-upto { font-size: 14px; }
+    #iapOverlay.has-holiday .iap-hol-num { font-size: 70px; line-height: 70px; }
+    #iapOverlay.has-holiday .iap-hol-pct > span:first-child { font-size: 20px; }
+    #iapOverlay.has-holiday .iap-hol-pct > span:last-child { font-size: 16px; }
+  }
+  @media (max-width: 599px) {
+    /* Pinned tabs: see-through until content scrolls under them, then the solid top tint */
+    #iapOverlay.has-holiday .iap-toggle-bar { background: transparent; }
+    #iapOverlay.has-holiday .iap-toggle-bar.is-stuck { background: var(--hol-tint-solid); }
+    #iapOverlay.has-holiday .iap-hol { margin: 0 18px 12px; padding: 8px 12px; column-gap: 8px; }
+    #iapOverlay.has-holiday .iap-hol-num { font-size: 60px; line-height: 60px; }
+    #iapOverlay.has-holiday .iap-hol-title { font-size: 17px; }
+    #iapOverlay.has-holiday .iap-hol-count { padding: 2px 10px; font-size: 13px; }
+  }
   /* Checklist + CTA follow the selected plan */
   #iapOverlay[data-plan="pro"] .iap-feat li:first-child { background: var(--c-pro-soft); }
   #iapOverlay[data-plan="pro"] .iap-feat b { color: var(--c-pro-text); }
@@ -319,7 +455,7 @@
     <div class="iap-scroll" id="iapScroll">
       <!-- LEFT: plans -->
       <section class="iap-main">
-        <h2 class="iap-title" id="iapTitle">Choose the Right Plan for You</h2>
+        <h2 class="iap-title" id="iapTitle">Choose Your Premium Plan</h2>
 
         <!-- 1. Monthly / Yearly -->
         <div class="iap-toggle-bar" id="iapToggleBar">
@@ -360,10 +496,19 @@
 
       <!-- RIGHT: what's included -->
       <section class="iap-incl" aria-labelledby="iapInclTitle">
+        <!-- Holiday hero: shown only while a holiday theme is on (#iapOverlay[data-holiday]) -->
+        <div class="iap-hol" id="iapHol">
+          <div class="iap-hol-count"><span class="iap-hol-ic" aria-hidden="true"></span><span id="iapCountdown">3:02:20:25</span></div>
+          <div class="iap-hol-text">
+            <p class="iap-hol-title">Flash Sales</p>
+            <p class="iap-hol-deal"><span class="iap-hol-upto">UP TO</span><span class="iap-hol-num" id="iapHolNum">50</span><span class="iap-hol-pct"><span>%</span><span>off</span></span></p>
+          </div>
+        </div>
         <div class="iap-incl-head">
           <h3 id="iapInclTitle">What's included in</h3><span class="iap-tag pro" id="iapInclTag">Pro</span>
         </div>
         <!-- 6. Check list -->
+        <div class="iap-incl-card">
         <ul class="iap-feat" id="iapFeat"></ul>
         <div class="iap-agent">
           <div class="iap-agent-row">
@@ -375,6 +520,7 @@
             <a class="iap-agent-link" id="iapExplore" href="#" target="_blank" rel="noopener">Explore</a>
             <div class="iap-agent-tip" id="iapAgentTip" role="tooltip" hidden><b>Create directly in your AI assistant</b><p>Connect YouCam AI Agent to ChatGPT, Claude, and Gemini to create and edit visual content through conversation.</p></div>
           </div>
+        </div>
         </div>
         <!-- 7. Full comparison → Pricing page (Subscription tab) -->
         <a class="iap-compare" id="iapCompare" href="#" target="_blank" rel="noopener">View Full Feature Comparison <svg class="iap-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
@@ -437,6 +583,31 @@
     modal.style.minHeight = modal.offsetHeight + 'px';
   }
   window.addEventListener('resize', lockDesktopHeight);
+
+  // Holiday hero: top of the right panel on desktop, under the title on tablet / phone
+  var hol = $('iapHol'), inclEl = overlay.querySelector('.iap-incl');
+  function placeHoliday() {
+    if (DESKTOP.matches) { if (hol.parentNode !== inclEl) inclEl.insertBefore(hol, inclEl.firstChild); }
+    else { var t = $('iapTitle'); if (hol.previousElementSibling !== t) t.after(hol); }
+  }
+  placeHoliday();
+  if (DESKTOP.addEventListener) DESKTOP.addEventListener('change', placeHoliday); else DESKTOP.addListener(placeHoliday);
+  // Theme switch changes the popup's height: re-measure the desktop lock and the footer shadow
+  var HOLIDAY_THEMES = ['christmas', 'year-end', 'halloween', 'black-friday'];   // themes with a finished design; others fall back to the default look
+  function applyHoliday() { overlay.classList.toggle('has-holiday', HOLIDAY_THEMES.indexOf(overlay.getAttribute('data-holiday')) > -1); }
+  applyHoliday();
+  new MutationObserver(function () {
+    applyHoliday();
+    modal.style.minHeight = ''; lockDesktopHeight();
+    if (typeof updateFade === 'function') updateFade();
+  }).observe(overlay, { attributes: true, attributeFilter: ['data-holiday'] });
+  // Sale countdown (prototype: counts down from 3d 2h 20m 25s after the page loads)
+  var saleEnd = Date.now() + ((3 * 24 + 2) * 3600 + 20 * 60 + 25) * 1000;
+  function tick() {
+    var t = Math.max(0, Math.floor((saleEnd - Date.now()) / 1000)), p = function (n) { return (n < 10 ? '0' : '') + n; };
+    $('iapCountdown').textContent = Math.floor(t / 86400) + ':' + p(Math.floor(t % 86400 / 3600)) + ':' + p(Math.floor(t % 3600 / 60)) + ':' + p(t % 60);
+  }
+  tick(); setInterval(tick, 1000);
   var lastFocus = null;
 
   $('iapSave').textContent = maxOff + '% off';
