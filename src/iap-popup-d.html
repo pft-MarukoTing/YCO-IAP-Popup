@@ -11,7 +11,7 @@
     --c-green: #4CD137;
     --c-text: #15171F; --c-text-2: #4A5560; --c-text-3: #8A96A3; --c-text-4: #B4BDC6;
     --c-line: #E6EBF0; --c-fill: #F2F5F8; --c-panel: #F8FAFB; --c-white: #fff;
-    --c-sale: #E53935;
+    --c-sale: #F23B77;
     --radius-card: 14px;
     position: fixed; inset: 0; z-index: 2147483000;
     display: none; align-items: center; justify-content: center;
@@ -29,6 +29,8 @@
   #iapOverlay .iap-scroll::-webkit-scrollbar, #iapOverlay .iap-main::-webkit-scrollbar, #iapOverlay .iap-incl::-webkit-scrollbar { display: none; }
   #iapOverlay :focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
   #iapOverlay .iap-modal:focus, #iapOverlay .iap-modal:focus-visible { outline: none; }
+  /* Monthly / Yearly tabs: no focus ring */
+  #iapOverlay .iap-toggle button:focus, #iapOverlay .iap-toggle button:focus-visible { outline: none; }
 
   /* ── Shell: desktop grid ─────────────────────────────── */
   .iap-modal {
@@ -71,7 +73,7 @@
   .iap-plan:hover { border-color: #C9D3DC; }
   .iap-plan[aria-checked="true"] { border-color: var(--c-brand); background: var(--c-brand-soft); box-shadow: 0 0 0 4px rgba(3,173,226,.10); }
   .iap-plan-head { display: flex; align-items: center; gap: 8px; }
-  .iap-off { position: absolute; top: 16px; right: 18px; font-size: 12px; font-weight: 700; color: #fff; padding: 3px 9px; border-radius: 20px; background: #D23C3C; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .iap-off { position: absolute; top: 16px; right: 18px; font-size: 12px; font-weight: 700; color: #fff; padding: 3px 9px; border-radius: 20px; background: #F23B77; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .iap-off[hidden] { display: none; }
   .iap-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #C3CCD5; display: grid; place-items: center; flex-shrink: 0; transition: border-color .15s; }
   .iap-radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--c-brand); transform: scale(0); transition: transform .15s; }
@@ -92,7 +94,7 @@
   .iap-slider {
     margin-top: 14px; cursor: default;
     display: flex; flex-direction: column; gap: 8px;
-    padding: 34px 16px 12px; border: 2px solid rgba(3,173,226,.2); border-radius: 16px; background: var(--c-white);
+    padding: 34px 16px 12px; border: 2px solid rgba(3,173,226,.2); border-radius: 16px; background: rgba(3,173,226,.05);
   }
   .iap-track { position: relative; height: 26px; touch-action: none; cursor: pointer; outline: none; --pos: 8px; --ratio: 0; }
   .iap-track .bar, .iap-track .progress, .iap-track .hint-trail { position: absolute; top: 50%; height: 6px; margin-top: -3px; border-radius: 19px; }
@@ -161,8 +163,8 @@
     transition: transform .15s, box-shadow .15s;
   }
   .iap-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(3,173,226,.38); }
-  .iap-buy { display: block; width: 100%; padding: 12px 0 6px; font-size: 15px; font-weight: 600; color: var(--c-brand) !important; text-align: center; text-decoration: underline !important; text-underline-position: from-font; }
-  .iap-buy:hover { color: var(--c-brand-dark) !important; }
+  .iap-buy { display: block; width: 100%; padding: 12px 0 6px; font-size: 15px; font-weight: 600; color: var(--c-text) !important; text-align: center; text-decoration: underline !important; text-underline-position: from-font; }
+  .iap-buy:hover { color: var(--c-text-2) !important; }
 
   /* ── Right: What's included ──────────────────────────── */
   .iap-incl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-right: 48px; min-height: 36px; }
@@ -174,10 +176,20 @@
   .iap-ck { width: 22px; height: 22px; border-radius: 50%; background: var(--c-brand); display: grid; place-items: center; flex-shrink: 0; margin-top: 0; }
   .iap-ck svg { width: 12px; height: 12px; }
 
-  .iap-agent { margin-top: 16px; border: 1px solid var(--c-line); background: #FAFBFC; border-radius: 12px; padding: 6px 16px; }
-  .iap-agent-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 14.5px; color: var(--c-text-2); }
-  .iap-agent-row a { color: var(--c-brand) !important; font-weight: 500; white-space: nowrap; }
-  .iap-agent-row a:hover { text-decoration: underline; }
+  /* AI Agent links — matches pricing-page-optimization's .agent-links */
+  .iap-agent { margin-top: 16px; display: flex; flex-direction: column; padding: 12px 20px; background: rgba(17,24,26,.02); border-radius: 16px; }
+  .iap-agent-row { position: relative; display: flex; align-items: center; gap: 4px; min-height: 32px; }
+  .iap-agent-name { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 4px; font-size: 14px; line-height: 20px; font-weight: 600; color: rgba(9,22,26,.95); white-space: nowrap; }
+  .iap-info-btn { display: inline-flex !important; padding: 4px !important; margin: -4px !important; border-radius: 50%; }
+  .iap-info-btn img { display: block; width: 12px; height: 12px; }
+  .iap-info-btn:hover, .iap-info-btn[aria-expanded="true"] { background: rgba(17,24,26,.04) !important; }
+  .iap-agent-link { display: inline-flex; align-items: center; height: 32px; padding: 0 12px 0 16px; border-radius: 32px; color: var(--c-brand) !important; font-size: 14px; line-height: 20px; font-weight: 600; text-decoration: underline !important; text-underline-position: from-font; white-space: nowrap; }
+  .iap-agent-link:hover { background: rgba(17,24,26,.04); }
+  /* Connector tooltip (click the info icon) */
+  .iap-agent-tip { position: absolute; z-index: 5; left: 0; bottom: calc(100% + 8px); width: min(324px, 100%); padding: 8px 12px; border-radius: 8px;
+    background: rgba(9,22,26,.95); color: rgba(255,255,255,.7); box-shadow: 0 8px 24px -4px rgba(0,0,0,.16); font-size: 14px; line-height: 20px; white-space: normal; }
+  .iap-agent-tip b { display: block; margin-bottom: 4px; color: #fff; font-weight: 600; }
+  .iap-agent-tip::after { content: ""; position: absolute; top: 100%; left: calc(var(--arrow-x, 24px) - 8px); border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid rgba(9,22,26,.95); }
   .iap-chev { flex: none; }
   .iap-compare {
     display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 16px; height: 48px;
@@ -248,6 +260,38 @@
   @keyframes iapFadeOut { to { background: rgba(9,22,26,0); } }
   @keyframes iapUp { from { transform: translateY(100%); } }
   @keyframes iapDown { from { transform: translateY(var(--drag-y, 0px)); } to { transform: translateY(100%); } }
+  /* ── D: Pro in orange (accents from pricing-page-optimization's "Get Pro Pack") ── */
+  #iapOverlay { --c-pro: #FF8800; --c-pro-text: #EA7D00; --c-pro-soft: #FFF3E5;
+    --pro-gradient: linear-gradient(88.46deg, #FFB802 0%, #FFA51C 32.565%, #FF8800 99.797%); }
+  /* Pro card: orange price, radio and selected state */
+  #iapPro .iap-price { color: var(--c-pro-text); }
+  #iapPro .iap-radio::after { background: var(--c-pro); }
+  #iapPro[aria-checked="true"] { border-color: var(--c-pro); box-shadow: 0 0 0 4px rgba(255,136,0,.12); }
+  #iapPro[aria-checked="true"] .iap-radio { border-color: var(--c-pro); }
+  /* Credit slider (always Pro) */
+  .iap-slider { border-color: rgba(255,136,0,.2); background: var(--c-white); }
+  .iap-track .progress { background: var(--pro-gradient); }
+  .iap-track .dots i.is-passed { background: var(--c-pro); }
+  .iap-track .hint-trail { background: linear-gradient(90deg, rgba(255,136,0,0) 0%, rgba(255,165,28,.25) 40%, var(--c-pro) 100%); }
+  .iap-track:focus-visible .handle { box-shadow: 0 0 0 3px rgba(255,136,0,.35); }
+  /* Plus tag: gradient blue with white text (pricing-page-optimization's .mini-tag.plus) */
+  .iap-tag.plus { color: #fff; background: linear-gradient(34deg, rgba(68,227,237,.8) 2.43%, rgba(3,173,226,.8) 67.21%), #fff; }
+  /* Selected card: A's filled style — Plus in brand-soft, Pro in soft orange; slider stays white */
+  #iapPro[aria-checked="true"] { background: var(--c-pro-soft); }
+  /* Credit slider only shows while Pro is selected */
+  #iapPro[aria-checked="false"] .iap-slider { display: none; }
+  /* Yearly tag in Fill/Badge pink (#F23B77), as on the pricing page */
+  .iap-save { background: #F23B77; }
+  /* D: plan-card discount badges — soft pink fill + pink text */
+  .iap-off { background: rgba(242,59,119,.08); color: #F23B77; }
+  /* Checklist + CTA follow the selected plan */
+  #iapOverlay[data-plan="pro"] .iap-feat li:first-child { background: var(--c-pro-soft); }
+  #iapOverlay[data-plan="pro"] .iap-feat b { color: var(--c-pro-text); }
+  #iapOverlay[data-plan="pro"] .iap-ck { background: var(--c-pro); }
+  #iapOverlay[data-plan="pro"] .iap-cta { background: var(--pro-gradient) !important; box-shadow: 0 8px 22px rgba(255,136,0,.3); }
+  #iapOverlay[data-plan="pro"] .iap-cta:hover { box-shadow: 0 12px 28px rgba(255,136,0,.38); }
+
+
   @media (prefers-reduced-motion: reduce) { #iapOverlay, #iapOverlay * { animation-duration: 1ms !important; } }
 </style>
 
@@ -291,7 +335,7 @@
                 <div class="bar"></div><div class="hint-trail"></div><div class="progress"></div>
                 <div class="dots" id="iapDots" aria-hidden="true"></div>
                 <img class="swipe-hint" src="assets/finger-pointer.svg" alt="" width="42" height="42" draggable="false">
-                <img class="handle" src="assets/handle-blue.svg" alt="" width="26" height="26" draggable="false">
+                <img class="handle" src="assets/handle-orange.svg" alt="" width="26" height="26" draggable="false">
                 <span class="handle-tip" aria-hidden="true"><img src="assets/coin.svg" alt="" width="16" height="16"><span id="iapTip">300 credits</span></span>
               </div>
               <div class="iap-ticks" id="iapTicks"></div>
@@ -308,8 +352,15 @@
         <!-- 6. Check list -->
         <ul class="iap-feat" id="iapFeat"></ul>
         <div class="iap-agent">
-          <div class="iap-agent-row"><span>YouCam AI Agent</span><a id="iapUsage" href="#" target="_blank" rel="noopener">Usage details</a></div>
-          <div class="iap-agent-row"><span>AI Agent Connector</span><a id="iapExplore" href="#" target="_blank" rel="noopener">Explore</a></div>
+          <div class="iap-agent-row">
+            <span class="iap-agent-name">YouCam AI Agent</span>
+            <a class="iap-agent-link" id="iapUsage" href="#" target="_blank" rel="noopener">Usage details</a>
+          </div>
+          <div class="iap-agent-row">
+            <span class="iap-agent-name">AI Agent Connector <button class="iap-info-btn" id="iapInfo" type="button" aria-label="About AI Agent Connector" aria-expanded="false" aria-controls="iapAgentTip"><img src="assets/ic-info.svg" alt="" width="12" height="12"></button></span>
+            <a class="iap-agent-link" id="iapExplore" href="#" target="_blank" rel="noopener">Explore</a>
+            <div class="iap-agent-tip" id="iapAgentTip" role="tooltip" hidden><b>Create directly in your AI assistant</b><p>Connect YouCam AI Agent to ChatGPT, Claude, and Gemini to create and edit visual content through conversation.</p></div>
+          </div>
         </div>
         <!-- 7. Full comparison → Pricing page (Subscription tab) -->
         <a class="iap-compare" id="iapCompare" href="#" target="_blank" rel="noopener">View Full Feature Comparison <svg class="iap-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
@@ -343,7 +394,7 @@
   var PRICING_URL = 'https://pricing-page-optimization.vercel.app/?discount=off';
   var LINKS = {
     compare: PRICING_URL + '&tab=sub',            // 7. Pricing page — Subscription tab
-    buy:     PRICING_URL + '&tab=payg',           // 8. Pricing page — Pay as you go tab
+    buy:     'https://yce.perfectcorp.com/pricing?pay=true',  // 8. Live YCE pricing page, opens on the Pay As You Go tab
     usage:   PRICING_URL + '#cmp-ai-agent',
     explore: 'https://yce.perfectcorp.com/products/youcam-for-ai-assistants'
   };
@@ -363,6 +414,15 @@
 
   var overlay = $('iapOverlay'), modal = overlay.querySelector('.iap-modal');
   var MOBILE = window.matchMedia('(max-width: 599px)');
+  var DESKTOP = window.matchMedia('(min-width: 900px)');
+  // Desktop: hold the popup at its Pro height so switching to Plus (shorter list, no slider) doesn't make it jump
+  function lockDesktopHeight() {
+    if (!DESKTOP.matches) { modal.style.minHeight = ''; return; }
+    if (state.plan !== 'pro') return;
+    modal.style.minHeight = '';
+    modal.style.minHeight = modal.offsetHeight + 'px';
+  }
+  window.addEventListener('resize', lockDesktopHeight);
   var lastFocus = null;
 
   $('iapSave').textContent = maxOff + '% off';
@@ -390,6 +450,7 @@
     $('iapMonthly').setAttribute('aria-pressed', !y);
     $('iapPlus').setAttribute('aria-checked', state.plan === 'plus');
     $('iapPro').setAttribute('aria-checked', state.plan === 'pro');
+    overlay.setAttribute('data-plan', state.plan);
 
     // 3–4. Plus
     $('iapPlusPrice').textContent = money(y ? PLUS.mo : PLUS.m);
@@ -507,6 +568,19 @@
     toast('Prototype: goes to checkout — ' + what + ' · ' + (state.yearly ? 'Yearly ' + money(yearTotal(p)) : 'Monthly ' + money(p.m)));
   });
 
+  // AI Agent Connector tooltip: click the info icon to toggle; click elsewhere or Esc closes it
+  var infoBtn = $('iapInfo'), agentTip = $('iapAgentTip');
+  function closeAgentTip() { agentTip.hidden = true; infoBtn.setAttribute('aria-expanded', 'false'); }
+  infoBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    agentTip.hidden = !agentTip.hidden;
+    var row = infoBtn.closest('.iap-agent-row').getBoundingClientRect(), icon = infoBtn.getBoundingClientRect();
+    agentTip.style.setProperty('--arrow-x', (icon.left + icon.width / 2 - row.left) + 'px');
+    infoBtn.setAttribute('aria-expanded', !agentTip.hidden);
+  });
+  document.addEventListener('click', function (e) { if (!agentTip.hidden && !agentTip.contains(e.target)) closeAgentTip(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !agentTip.hidden) { closeAgentTip(); e.stopImmediatePropagation(); } }, true);
+
   // Phone/tablet: drop the footer shadow once the list is scrolled to the end
   var scrollEl = $('iapScroll');
   function updateFade() { modal.classList.toggle('at-end', scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 4); }
@@ -541,6 +615,7 @@
     state.plan = 'pro'; state.yearly = true; state.tier = 0; render();
     overlay.classList.remove('closing');
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
+    lockDesktopHeight();
     lockScroll();
     $('iapScroll').scrollTop = 0; updateFade();
     // Focus the dialog itself (not the close button) so no focus ring shows on open
@@ -548,7 +623,7 @@
     if (SHOW_SWIPE_HINT) setTimeout(playHint, MOBILE.matches ? 700 : 450);
   };
   function finishClose() {
-    stopHint();
+    stopHint(); closeAgentTip();
     overlay.classList.remove('open', 'closing'); overlay.setAttribute('aria-hidden', 'true');
     modal.style.transform = ''; modal.style.removeProperty('--drag-y');
     unlockScroll();

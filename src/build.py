@@ -1,4 +1,4 @@
-"""Build index.html (A), b.html (B) and c.html (C) = YCE homepage snapshot + logged-in header + IAP popup.
+"""Build c.html (C) and d.html (D); index.html redirects to c.html = YCE homepage snapshot + logged-in header + IAP popup.
 
     python3 src/build.py
 """
@@ -52,7 +52,7 @@ def once(s, a, b):
     assert s.count(a) >= 1, a[:60]
     return s.replace(a, b, 1)
 
-# Version switcher (bottom-right pill) so A, B and C can be compared side by side in the browser
+# Version switcher (bottom-right pill) so C and D can be compared side by side in the browser
 def switcher(current):
     pill = lambda v, href: (f'<a href="{href}" aria-current="{str(v == current).lower()}">{v}</a>')
     return (
@@ -60,14 +60,13 @@ def switcher(current):
         'border-radius:20px;background:rgba(21,23,31,.82);font:600 13px/1 Roboto,system-ui,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.2)}'
         '.proto-ab a{padding:6px 12px;border-radius:16px;color:#fff;text-decoration:none;opacity:.7}'
         '.proto-ab a[aria-current=true]{background:#fff;color:#15171F;opacity:1}</style>'
-        f'<nav class="proto-ab" aria-label="Prototype version">{pill("A", "index.html")}{pill("B", "b.html")}{pill("C", "c.html")}</nav>'
+        f'<nav class="proto-ab" aria-label="Prototype version">{pill("C", "c.html")}{pill("D", "d.html")}</nav>'
     )
 
 # (version, popup source, output file)
 VARIANTS = [
-    ('A', 'iap-popup.html', 'index.html'),
-    ('B', 'iap-popup-b.html', 'b.html'),
     ('C', 'iap-popup-c.html', 'c.html'),
+    ('D', 'iap-popup-d.html', 'd.html'),
 ]
 
 for version, src, dest in VARIANTS:
@@ -79,3 +78,10 @@ for version, src, dest in VARIANTS:
     out = once(out, '</body>', popup + TRIGGER + switcher(version) + '</body>')
     (ROOT / dest).write_text(out, encoding='utf-8')
     print(f'built {dest} ({version})', len(out))
+
+# Root URL opens version C
+(ROOT / 'index.html').write_text(
+    '<!doctype html><meta charset="utf-8"><title>IAP Popup prototype</title>'
+    '<meta http-equiv="refresh" content="0; url=c.html"><script>location.replace("c.html"+location.search)</script>',
+    encoding='utf-8')
+print('built index.html (redirect to c.html)')
