@@ -1,0 +1,640 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     YCO IAP POPUP — "Pro Plan with More Monthly Credit Options" (PM p.27)
+     ≥ 900px   Desktop : two columns (plans | What's included)
+     600–899px Tablet  : one column, centered, CTA pinned to the bottom
+     < 600px   Mobile  : bottom sheet, drag handle / swipe down to close
+     Open with openIAP(), close with closeIAP().
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  #iapOverlay {
+    --c-brand: #03ADE2; --c-brand-dark: #0292C0; --c-brand-soft: #E7F6FC;
+    --c-green: #4CD137;
+    --c-text: #15171F; --c-text-2: #4A5560; --c-text-3: #8A96A3; --c-text-4: #B4BDC6;
+    --c-line: #E6EBF0; --c-fill: #F2F5F8; --c-panel: #F8FAFB; --c-white: #fff;
+    --c-sale: #E53935;
+    --radius-card: 14px;
+    position: fixed; inset: 0; z-index: 2147483000;
+    display: none; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(9,22,26,0.55);
+    font-family: 'Roboto', system-ui, sans-serif; color: var(--c-text);
+    -webkit-font-smoothing: antialiased; line-height: normal; text-align: left;
+  }
+  #iapOverlay.open { display: flex; animation: iapFade .2s ease; }
+  :where(#iapOverlay) *, :where(#iapOverlay) *::before, :where(#iapOverlay) *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :where(#iapOverlay) button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :where(#iapOverlay) a { color: inherit; text-decoration: none; }
+  #iapOverlay [hidden] { display: none !important; }
+  /* Popup panels still scroll, but without a visible scrollbar */
+  #iapOverlay .iap-scroll, #iapOverlay .iap-main, #iapOverlay .iap-incl { scrollbar-width: none; }
+  #iapOverlay .iap-scroll::-webkit-scrollbar, #iapOverlay .iap-main::-webkit-scrollbar, #iapOverlay .iap-incl::-webkit-scrollbar { display: none; }
+  #iapOverlay :focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
+
+  /* ── Shell: desktop grid ─────────────────────────────── */
+  .iap-modal {
+    position: relative; width: 880px; max-width: 100%;
+    max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px);
+    background: var(--c-white); border-radius: 20px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,.2), 0 8px 20px rgba(0,0,0,.12);
+    display: grid; grid-template-columns: 384px 1fr; grid-template-rows: 1fr auto;
+    grid-template-areas: "main incl" "foot incl";
+  }
+  .iap-scroll { display: contents; }
+  .iap-main { grid-area: main; background: var(--c-panel); padding: 28px 28px 8px; overflow-y: auto; border-right: 1px solid var(--c-line); }
+  .iap-incl { grid-area: incl; padding: 28px 28px 24px; overflow-y: auto; }
+  .iap-foot { grid-area: foot; background: var(--c-panel); padding: 12px 28px 20px; border-right: 1px solid var(--c-line); }
+
+  .iap-top { position: absolute; top: 16px; right: 16px; z-index: 5; }
+  .iap-handle { display: none; }
+  .iap-close {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--c-fill) !important;
+    display: grid; place-items: center; color: var(--c-text-3) !important; transition: background .15s, color .15s;
+  }
+  .iap-close:hover { background: var(--c-line) !important; color: var(--c-text) !important; }
+
+  /* ── Left: title + billing toggle ────────────────────── */
+  .iap-title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 16px; }
+  .iap-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--c-fill); border-radius: 10px; margin-bottom: 16px; }
+  .iap-toggle button {
+    height: 40px; border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--c-text-3) !important;
+    display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, color .15s, box-shadow .15s;
+  }
+  .iap-toggle button[aria-pressed="true"] { background: var(--c-white) !important; color: var(--c-text) !important; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .iap-save { font-size: 11.5px; font-weight: 700; color: #fff; padding: 3px 9px; border-radius: 20px; background: linear-gradient(135deg, #29C4F6, #0292C0); white-space: nowrap; }
+
+  /* ── Plan cards ──────────────────────────────────────── */
+  .iap-plans { display: flex; flex-direction: column; gap: 12px; }
+  .iap-plan {
+    position: relative; background: var(--c-white); border: 1.5px solid var(--c-line); border-radius: var(--radius-card);
+    padding: 16px 18px; cursor: pointer; transition: border-color .15s, box-shadow .15s;
+  }
+  .iap-plan:hover { border-color: #C9D3DC; }
+  .iap-plan[aria-checked="true"] { border-color: var(--c-brand); background: var(--c-brand-soft); box-shadow: 0 0 0 4px rgba(3,173,226,.10); }
+  .iap-plan-head { display: flex; align-items: center; gap: 8px; }
+  .iap-off { position: absolute; top: 16px; right: 18px; font-size: 12px; font-weight: 700; color: #fff; padding: 3px 9px; border-radius: 20px; background: #D23C3C; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .iap-off[hidden] { display: none; }
+  .iap-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #C3CCD5; display: grid; place-items: center; flex-shrink: 0; transition: border-color .15s; }
+  .iap-radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--c-brand); transform: scale(0); transition: transform .15s; }
+  .iap-plan[aria-checked="true"] .iap-radio { border-color: var(--c-brand); }
+  .iap-plan[aria-checked="true"] .iap-radio::after { transform: scale(1); }
+  .iap-plan-name { font-size: 18px; font-weight: 700; }
+  .iap-tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+  .iap-tag.plus { background: rgba(3,173,226,.12); color: var(--c-brand-dark); }
+  .iap-tag.pro { background: linear-gradient(135deg, #FF8C00, #FFA726); color: #fff; }
+  .iap-price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .iap-price { font-size: 28px; font-weight: 700; color: var(--c-brand); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .iap-per { font-size: 15px; color: var(--c-text-3); }
+  .iap-strike { font-size: 15px; color: var(--c-text-4); text-decoration: line-through; }
+  .iap-sub { font-size: 13.5px; color: var(--c-text-3); margin-top: 2px; }
+  .iap-sub strong { color: var(--c-text); font-weight: 600; }
+
+  /* Credit slider (Pro) — ported from the pricing page (pft-MarukoTing/pricing-page-optimization) */
+  .iap-slider {
+    margin-top: 14px; cursor: default;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 34px 16px 12px; border: 2px solid rgba(3,173,226,.2); border-radius: 16px; background: rgba(3,173,226,.05);
+  }
+  .iap-track { position: relative; height: 26px; touch-action: none; cursor: pointer; outline: none; --pos: 8px; --ratio: 0; }
+  .iap-track .bar, .iap-track .progress, .iap-track .hint-trail { position: absolute; top: 50%; height: 6px; margin-top: -3px; border-radius: 19px; }
+  .iap-track .bar { left: 4px; right: 4px; background: rgba(17,24,26,.2); }
+  .iap-track .progress { left: 4px; width: calc(var(--pos) - 4px); background: var(--c-brand); }
+  .iap-track .handle { position: absolute; z-index: 1; top: 0; left: var(--pos); width: 26px; height: 26px; margin-left: -13px; transition: transform .15s; }
+  .iap-track:not(.dragging) .progress { transition: width .18s ease; }
+  .iap-track:not(.dragging) .handle { transition: left .18s ease, transform .15s; }
+  .iap-track:hover .handle, .iap-track.dragging .handle { transform: scale(1.08); }
+  .iap-track:focus-visible .handle { border-radius: 50%; box-shadow: 0 0 0 3px rgba(3,173,226,.35); }
+  /* Stop dots: blue before the handle, gray (soft white ring) after it; none at the first stop */
+  .iap-track .dots i {
+    position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+    background: #b9b9b9; box-shadow: 0 0 0 1px rgba(255,255,255,.6);
+    transition: background-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+  }
+  .iap-track .dots i.is-passed { background: var(--c-brand); box-shadow: none; }
+  .iap-track .dots i.is-current, .iap-track .dots i:first-child, .iap-track .dots i.is-covered { opacity: 0; }
+  /* Credits tooltip — always visible, follows the handle. It slides from left-aligned (first stop) to
+     right-aligned (last stop) so it never sticks out of the card; the arrow tracks the handle. */
+  .iap-track .handle-tip {
+    position: absolute; z-index: 3; bottom: calc(100% + 6px); left: var(--pos); transform: translateX(calc(-12px - var(--ratio) * (100% - 24px)));
+    display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 8px;
+    background: #fff; color: rgba(9,22,26,.95); font-size: 14px; line-height: 20px; font-weight: 600; white-space: nowrap;
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,.16)); pointer-events: none;
+  }
+  .iap-track .handle-tip img { flex: none; width: 16px; height: 16px; }
+  .iap-track .handle-tip::after {
+    content: ""; position: absolute; top: 100%; left: calc(12px + var(--ratio) * (100% - 24px)); margin-left: -6px;
+    border: 6px solid transparent; border-bottom: 0; border-top-color: #fff;
+  }
+  .iap-track:not(.dragging) .handle-tip { transition: left .18s ease, transform .18s ease; }
+  .iap-track:not(.dragging) .handle-tip::after { transition: left .18s ease; }
+  /* Swipe hint: a finger drags across the stops; plays when the popup opens, stops on interaction */
+  .iap-track .swipe-hint {
+    position: absolute; z-index: 2; top: 12px; left: var(--pos); margin-left: -15.75px; width: 42px; height: 42px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); opacity: 0; pointer-events: none;
+  }
+  .iap-track .hint-trail { z-index: 1; left: 4px; width: 0; opacity: 0; background: linear-gradient(90deg, rgba(3,173,226,0) 0%, rgba(3,173,226,.25) 40%, var(--c-brand) 100%); }
+  .iap-track.hinting .swipe-hint { animation: iapSwipe 2.4s ease-in-out 2; }
+  .iap-track.hinting .hint-trail { animation: iapTrail 2.4s ease-in-out 2; }
+  @keyframes iapSwipe {
+    0%   { opacity: 0; left: 8px; transform: scale(1); }
+    10%  { opacity: 1; left: 8px; transform: scale(.92); }
+    60%  { opacity: 1; left: calc(100% - 8px); transform: scale(.92); animation-timing-function: linear; }
+    70%  { opacity: 0; left: calc(100% - 8px); transform: scale(1); }
+    100% { opacity: 0; left: 8px; }
+  }
+  @keyframes iapTrail {
+    0%   { opacity: 0; width: 4px; }
+    10%  { opacity: 1; width: 4px; }
+    60%  { opacity: 1; width: calc(100% - 12px); animation-timing-function: linear; }
+    70%  { opacity: 0; width: calc(100% - 12px); }
+    100% { opacity: 0; width: 4px; }
+  }
+  .iap-ticks { display: flex; align-items: center; gap: 4px; font-size: 13px; line-height: 16px; color: rgba(17,24,26,.45); }
+  .iap-ticks button { padding: 0; color: inherit !important; flex: 1 1 0; min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
+  .iap-ticks button:first-child { flex: 0 0 36px; text-align: left; }
+  .iap-ticks button:last-child { flex: 0 0 40px; text-align: right; }
+  .iap-ticks button[aria-current="true"], .iap-ticks button:hover { color: rgba(9,22,26,.95) !important; }
+
+  /* ── Footer CTA ──────────────────────────────────────── */
+  .iap-cta {
+    width: 100%; height: 52px; border-radius: 100px; font-size: 17px; font-weight: 700; color: #fff !important;
+    background: linear-gradient(90deg, #03ADE2, #4CD137) !important; box-shadow: 0 8px 22px rgba(3,173,226,.3);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .iap-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(3,173,226,.38); }
+  .iap-buy { display: block; width: 100%; padding: 12px 0 6px; font-size: 15px; font-weight: 600; color: var(--c-brand) !important; text-align: center; text-decoration: underline !important; text-underline-position: from-font; }
+  .iap-buy:hover { color: var(--c-brand-dark) !important; }
+
+  /* ── Right: What's included ──────────────────────────── */
+  .iap-incl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-right: 48px; min-height: 36px; }
+  .iap-incl-head h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .iap-feat { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .iap-feat li { display: flex; align-items: flex-start; gap: 12px; padding: 9px 12px; border-radius: 10px; font-size: 15.5px; line-height: 1.45; color: var(--c-text); }
+  .iap-feat li:first-child { background: var(--c-brand-soft); }
+  .iap-feat b { color: var(--c-brand); font-weight: 700; }
+  .iap-ck { width: 22px; height: 22px; border-radius: 50%; background: var(--c-brand); display: grid; place-items: center; flex-shrink: 0; margin-top: 0; }
+  .iap-ck svg { width: 12px; height: 12px; }
+
+  /* AI Agent links — matches pricing-page-optimization's .agent-links */
+  .iap-agent { margin-top: 16px; display: flex; flex-direction: column; padding: 12px 20px; background: rgba(17,24,26,.02); border-radius: 16px; }
+  .iap-agent-row { position: relative; display: flex; align-items: center; gap: 4px; min-height: 32px; }
+  .iap-agent-name { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 4px; font-size: 14px; line-height: 20px; font-weight: 600; color: rgba(9,22,26,.95); white-space: nowrap; }
+  .iap-info-btn { display: inline-flex !important; padding: 4px !important; margin: -4px !important; border-radius: 50%; }
+  .iap-info-btn img { display: block; width: 12px; height: 12px; }
+  .iap-info-btn:hover, .iap-info-btn[aria-expanded="true"] { background: rgba(17,24,26,.04) !important; }
+  .iap-agent-link { display: inline-flex; align-items: center; height: 32px; padding: 0 12px 0 16px; border-radius: 32px; color: var(--c-brand) !important; font-size: 14px; line-height: 20px; font-weight: 600; text-decoration: underline !important; text-underline-position: from-font; white-space: nowrap; }
+  .iap-agent-link:hover { background: rgba(17,24,26,.04); }
+  /* Connector tooltip (click the info icon) */
+  .iap-agent-tip { position: absolute; z-index: 5; left: 0; bottom: calc(100% + 8px); width: min(324px, 100%); padding: 8px 12px; border-radius: 8px;
+    background: rgba(9,22,26,.95); color: rgba(255,255,255,.7); box-shadow: 0 8px 24px -4px rgba(0,0,0,.16); font-size: 14px; line-height: 20px; white-space: normal; }
+  .iap-agent-tip b { display: block; margin-bottom: 4px; color: #fff; font-weight: 600; }
+  .iap-agent-tip::after { content: ""; position: absolute; top: 100%; left: calc(var(--arrow-x, 24px) - 8px); border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid rgba(9,22,26,.95); }
+  .iap-compare {
+    display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 16px; height: 48px;
+    border: 1.5px solid var(--c-line); border-radius: 12px; font-size: 15px; font-weight: 600; color: var(--c-brand) !important;
+    transition: border-color .15s, background .15s;
+  }
+  .iap-compare:hover { border-color: var(--c-brand); background: rgba(3,173,226,.04); }
+
+  .iap-toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 2147483001;
+    background: rgba(21,23,31,.92); color: #fff; font: 500 13.5px/1.4 'Roboto', sans-serif; padding: 10px 16px; border-radius: 10px;
+    max-width: calc(100vw - 32px); box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  }
+
+  /* ── < 900px: one column ─────────────────────────────── */
+  @media (max-width: 899px) {
+    #iapOverlay { padding: 20px; }
+    .iap-modal { width: 560px; display: flex; flex-direction: column; }
+    .iap-top { top: 14px; right: 14px; }
+    .iap-scroll { display: block; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .iap-main { background: var(--c-white); border-right: 0; padding: 22px 24px 8px; overflow: visible; }
+    .iap-title { padding-right: 48px; min-height: 36px; display: flex; align-items: center; }
+    .iap-incl { padding: 20px 24px 20px; overflow: visible; }
+    .iap-incl-head { padding: 4px 0 0; min-height: 0; }
+    /* Footer CTA lifts off the scrolling content with a shadow (Figma "Shadow/Footer CTA") instead of a border */
+    .iap-foot { position: relative; z-index: 1; background: var(--c-white); border-right: 0; box-shadow: 0 -2px 4px -2px rgba(0,0,0,.08); padding: 12px 24px 16px; flex-shrink: 0; }
+  }
+
+  /* ── < 600px: bottom sheet ───────────────────────────── */
+  @media (max-width: 599px) {
+    #iapOverlay { padding: 0; align-items: flex-end; }
+    .iap-modal {
+      width: 100%; max-height: 92vh; max-height: 92dvh; border-radius: 24px 24px 0 0;
+      animation: iapUp .38s cubic-bezier(.32,.72,0,1);
+    }
+    .iap-top { position: relative; top: auto; right: auto; height: 44px; flex-shrink: 0; touch-action: none; cursor: grab; }
+    .iap-handle { display: block; width: 36px; height: 4px; border-radius: 4px; background: var(--c-line); position: absolute; top: 10px; left: 50%; margin-left: -18px; }
+    .iap-close { position: absolute; right: 12px; top: 8px; width: 32px; height: 32px; }
+    .iap-main { padding: 0 18px 6px; }
+    .iap-title { font-size: 18px; padding-right: 0; min-height: 0; margin-bottom: 14px; }
+    .iap-toggle button { height: 38px; font-size: 14.5px; }
+    .iap-plan { padding: 14px 14px; }
+    .iap-off { top: 14px; right: 14px; }
+    .iap-price { font-size: 24px; }
+    .iap-per, .iap-strike { font-size: 14px; }
+    .iap-sub { font-size: 12.5px; }
+    .iap-ticks button { font-size: 12px; }
+    .iap-incl { padding: 16px 18px 16px; }
+    .iap-incl-head h3 { font-size: 17px; }
+    .iap-feat li { font-size: 14.5px; padding: 8px 10px; gap: 10px; }
+    .iap-ck { width: 20px; height: 20px; }
+    .iap-foot { padding: 10px 18px calc(12px + env(safe-area-inset-bottom)); }
+    .iap-cta { height: 48px; font-size: 16px; }
+    .iap-buy { padding: 10px 0 4px; font-size: 14.5px; }
+    #iapOverlay.closing { animation: iapFadeOut .28s ease forwards; }
+    #iapOverlay.closing .iap-modal { animation: iapDown .28s cubic-bezier(.4,0,1,1) forwards; }
+  }
+
+  @keyframes iapFade { from { background: rgba(9,22,26,0); } }
+  @keyframes iapFadeOut { to { background: rgba(9,22,26,0); } }
+  @keyframes iapUp { from { transform: translateY(100%); } }
+  @keyframes iapDown { from { transform: translateY(var(--drag-y, 0px)); } to { transform: translateY(100%); } }
+  /* ── B: Pro in orange (accents from pricing-page-optimization's "Get Pro Pack") ── */
+  #iapOverlay { --c-pro: #FF8800; --c-pro-text: #EA7D00; --c-pro-soft: #FFF3E5;
+    --pro-gradient: linear-gradient(88.46deg, #FFB802 0%, #FFA51C 32.565%, #FF8800 99.797%); }
+  /* Pro card: orange price, radio and selected state */
+  #iapPro .iap-price { color: var(--c-pro-text); }
+  #iapPro .iap-radio::after { background: var(--c-pro); }
+  #iapPro[aria-checked="true"] { border-color: var(--c-pro); box-shadow: 0 0 0 4px rgba(255,136,0,.12); }
+  #iapPro[aria-checked="true"] .iap-radio { border-color: var(--c-pro); }
+  /* Credit slider (always Pro) */
+  .iap-slider { border-color: rgba(255,136,0,.2); background: rgba(255,136,0,.05); }
+  .iap-track .progress { background: var(--pro-gradient); }
+  .iap-track .dots i.is-passed { background: var(--c-pro); }
+  .iap-track .hint-trail { background: linear-gradient(90deg, rgba(255,136,0,0) 0%, rgba(255,165,28,.25) 40%, var(--c-pro) 100%); }
+  .iap-track:focus-visible .handle { box-shadow: 0 0 0 3px rgba(255,136,0,.35); }
+  /* Plus tag: gradient blue with white text (pricing-page-optimization's .mini-tag.plus) */
+  .iap-tag.plus { color: #fff; background: linear-gradient(34deg, rgba(68,227,237,.8) 2.43%, rgba(3,173,226,.8) 67.21%), #fff; }
+  /* Selected card: border only, no fill */
+  .iap-plan[aria-checked="true"] { background: var(--c-white); }
+  /* Credit slider only shows while Pro is selected */
+  #iapPro[aria-checked="false"] .iap-slider { display: none; }
+  /* Yearly tag in the same red as the plan cards' discount badges */
+  .iap-save { background: #D23C3C; }
+  /* Checklist + CTA follow the selected plan */
+  #iapOverlay[data-plan="pro"] .iap-feat li:first-child { background: var(--c-pro-soft); }
+  #iapOverlay[data-plan="pro"] .iap-feat b { color: var(--c-pro-text); }
+  #iapOverlay[data-plan="pro"] .iap-ck { background: var(--c-pro); }
+  #iapOverlay[data-plan="pro"] .iap-cta { background: var(--pro-gradient) !important; box-shadow: 0 8px 22px rgba(255,136,0,.3); }
+  #iapOverlay[data-plan="pro"] .iap-cta:hover { box-shadow: 0 12px 28px rgba(255,136,0,.38); }
+
+  @media (prefers-reduced-motion: reduce) { #iapOverlay, #iapOverlay * { animation-duration: 1ms !important; } }
+</style>
+
+<div class="iap-overlay" id="iapOverlay" aria-hidden="true">
+  <div class="iap-modal" role="dialog" aria-modal="true" aria-labelledby="iapTitle">
+    <div class="iap-top">
+      <span class="iap-handle" aria-hidden="true"></span>
+      <button class="iap-close" id="iapClose" type="button" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="iap-scroll" id="iapScroll">
+      <!-- LEFT: plans -->
+      <section class="iap-main">
+        <h2 class="iap-title" id="iapTitle">Choose the Right Plan for You</h2>
+
+        <!-- 1. Monthly / Yearly -->
+        <div class="iap-toggle" role="group" aria-label="Billing period">
+          <button type="button" id="iapMonthly" aria-pressed="false">Monthly</button>
+          <button type="button" id="iapYearly" aria-pressed="true">Yearly <span class="iap-save" id="iapSave">60% off</span></button>
+        </div>
+
+        <div class="iap-plans" role="radiogroup" aria-label="Plan">
+          <!-- 2–4. Plus -->
+          <div class="iap-plan" id="iapPlus" role="radio" tabindex="0" aria-checked="false">
+            <div class="iap-plan-head"><span class="iap-radio"></span><span class="iap-plan-name">Plus</span><span class="iap-tag plus">Plus</span></div>
+            <span class="iap-off" id="iapPlusOff">67% off</span>
+            <div class="iap-price-row"><span class="iap-price" id="iapPlusPrice">$3.33</span><span class="iap-per">/mo</span><span class="iap-strike" id="iapPlusStrike">$9.99/mo</span></div>
+            <div class="iap-sub" id="iapPlusSub">Billed $39.96/year · 100 Credits / month</div>
+          </div>
+
+          <!-- 2–5. Pro + credit slider -->
+          <div class="iap-plan" id="iapPro" role="radio" tabindex="0" aria-checked="true">
+            <div class="iap-plan-head"><span class="iap-radio"></span><span class="iap-plan-name">Pro</span><span class="iap-tag pro">Pro</span></div>
+            <span class="iap-off" id="iapProOff">60% off</span>
+            <div class="iap-price-row"><span class="iap-price" id="iapProPrice">$7.99</span><span class="iap-per">/mo</span><span class="iap-strike" id="iapProStrike">$19.99/mo</span></div>
+            <div class="iap-sub" id="iapProSub">Billed $95.88/year · <strong>300 Credits / month</strong></div>
+            <div class="iap-slider" id="iapSlider">
+              <div class="iap-track" id="iapTrack" role="slider" tabindex="0" aria-label="Monthly credits" aria-valuemin="300" aria-valuemax="10000">
+                <div class="bar"></div><div class="hint-trail"></div><div class="progress"></div>
+                <div class="dots" id="iapDots" aria-hidden="true"></div>
+                <img class="swipe-hint" src="assets/finger-pointer.svg" alt="" width="42" height="42" draggable="false">
+                <img class="handle" src="assets/handle-orange.svg" alt="" width="26" height="26" draggable="false">
+                <span class="handle-tip" aria-hidden="true"><img src="assets/coin.svg" alt="" width="16" height="16"><span id="iapTip">300 credits</span></span>
+              </div>
+              <div class="iap-ticks" id="iapTicks"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: what's included -->
+      <section class="iap-incl" aria-labelledby="iapInclTitle">
+        <div class="iap-incl-head">
+          <h3 id="iapInclTitle">What's included in</h3><span class="iap-tag pro" id="iapInclTag">Pro</span>
+        </div>
+        <!-- 6. Check list -->
+        <ul class="iap-feat" id="iapFeat"></ul>
+        <div class="iap-agent">
+          <div class="iap-agent-row">
+            <span class="iap-agent-name">YouCam AI Agent</span>
+            <a class="iap-agent-link" id="iapUsage" href="#" target="_blank" rel="noopener">Usage details</a>
+          </div>
+          <div class="iap-agent-row">
+            <span class="iap-agent-name">AI Agent Connector <button class="iap-info-btn" id="iapInfo" type="button" aria-label="About AI Agent Connector" aria-expanded="false" aria-controls="iapAgentTip"><img src="assets/ic-info.svg" alt="" width="12" height="12"></button></span>
+            <a class="iap-agent-link" id="iapExplore" href="#" target="_blank" rel="noopener">Explore</a>
+            <div class="iap-agent-tip" id="iapAgentTip" role="tooltip" hidden><b>Create directly in your AI assistant</b><p>Connect YouCam AI Agent to ChatGPT, Claude, and Gemini to create and edit visual content through conversation.</p></div>
+          </div>
+        </div>
+        <!-- 7. Full comparison → Pricing page (Subscription tab) -->
+        <a class="iap-compare" id="iapCompare" href="#" target="_blank" rel="noopener">View Full Feature Comparison ›</a>
+      </section>
+    </div>
+
+    <!-- 8. CTA -->
+    <div class="iap-foot">
+      <button class="iap-cta" id="iapCta" type="button">Subscribe Now</button>
+      <a class="iap-buy" id="iapBuy" href="#" target="_blank" rel="noopener">Buy Credits</a>
+    </div>
+  </div>
+</div>
+<div class="iap-toast" id="iapToast" role="status" hidden></div>
+
+<script>
+(function () {
+  // ── Config ────────────────────────────────────────────────
+  // Prices (USD) — PM doc "Pro Plan with more credit pack - Pricing" (YCO Proposal 2).
+  // c = credits / month, m = monthly price, y = yearly price, mo = yearly price / 12 as shown on the UI.
+  // Pro defaults to the 300-credit tier.
+  var PLUS  = { c: 100, m: 9.99, y: 39.99, mo: 3.33 };
+  var TIERS = [
+    { c: 300,   m: 19.99,  y: 95.99,   mo: 7.99   },
+    { c: 800,   m: 34.99,  y: 249.99,  mo: 20.83  },
+    { c: 1500,  m: 59.99,  y: 429.99,  mo: 35.83  },
+    { c: 2500,  m: 89.99,  y: 649.99,  mo: 54.17  },
+    { c: 5000,  m: 164.99, y: 1199.99, mo: 99.99  },
+    { c: 10000, m: 319.99, y: 2399.99, mo: 199.99 }
+  ];
+  var PRICING_URL = 'https://pricing-page-optimization.vercel.app/?discount=off';
+  var LINKS = {
+    compare: PRICING_URL + '&tab=sub',            // 7. Pricing page — Subscription tab
+    buy:     PRICING_URL + '&tab=payg',           // 8. Pricing page — Pay as you go tab
+    usage:   PRICING_URL + '#cmp-ai-agent',
+    explore: 'https://yce.perfectcorp.com/products/youcam-for-ai-assistants'
+  };
+
+  var state = { plan: 'pro', yearly: true, tier: 0 };
+  var $ = function (id) { return document.getElementById(id); };
+  var money = function (n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var num = function (n) { return n.toLocaleString('en-US'); };
+  var yearTotal = function (p) { return p.y; };
+  // 1. Discount % = 1 − yearly price / (monthly price × 12)
+  var discount = function (p) { return 1 - yearTotal(p) / (p.m * 12); };
+  // Badge shows the Pro plan's highest discount (the 300-credit default tier: 60% off).
+  var maxOff = Math.round(Math.max.apply(null, TIERS.map(discount)) * 100);
+
+  var CK = '<span class="iap-ck"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+  var li = function (html) { return '<li>' + CK + '<span>' + html + '</span></li>'; };
+
+  var overlay = $('iapOverlay'), modal = overlay.querySelector('.iap-modal');
+  var MOBILE = window.matchMedia('(max-width: 599px)');
+  var lastFocus = null;
+
+  $('iapSave').textContent = maxOff + '% off';
+  $('iapUsage').href = LINKS.usage;
+  $('iapExplore').href = LINKS.explore;
+  $('iapCompare').href = LINKS.compare;
+  $('iapBuy').href = LINKS.buy;
+
+  TIERS.forEach(function (t, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = num(t.c); b.setAttribute('aria-label', num(t.c) + ' credits per month');
+    b.tabIndex = -1;
+    b.addEventListener('click', function (e) { e.stopPropagation(); stopHint(); setTier(i); });
+    $('iapTicks').appendChild(b);
+  });
+  // Handle centre sits on the tick centres: 8px from each edge, equal gaps.
+  var posFor = function (i) { return 'calc(8px + (100% - 16px) * ' + (i / (TIERS.length - 1)) + ')'; };
+  $('iapDots').innerHTML = TIERS.map(function (_, i) { return '<i style="left:' + posFor(i) + '"></i>'; }).join('');
+
+  function setTier(i) { state.tier = i; state.plan = 'pro'; render(); }
+
+  function render() {
+    var t = TIERS[state.tier], y = state.yearly;
+    $('iapYearly').setAttribute('aria-pressed', y);
+    $('iapMonthly').setAttribute('aria-pressed', !y);
+    $('iapPlus').setAttribute('aria-checked', state.plan === 'plus');
+    $('iapPro').setAttribute('aria-checked', state.plan === 'pro');
+    overlay.setAttribute('data-plan', state.plan);
+
+    // 3–4. Plus
+    $('iapPlusPrice').textContent = money(y ? PLUS.mo : PLUS.m);
+    $('iapPlusStrike').textContent = money(PLUS.m) + '/mo';
+    $('iapPlusStrike').hidden = !y;
+    $('iapPlusOff').textContent = Math.round(discount(PLUS) * 100) + '% off';
+    $('iapPlusOff').hidden = !y;
+    $('iapPlusSub').textContent = (y ? 'Billed ' + money(yearTotal(PLUS)) + '/year' : 'Billed monthly') + ' · 100 Credits / month';
+
+    // 3–5. Pro (follows the slider)
+    $('iapProPrice').textContent = money(y ? t.mo : t.m);
+    $('iapProStrike').textContent = money(t.m) + '/mo';
+    $('iapProStrike').hidden = !y;
+    $('iapProOff').textContent = Math.round(discount(t) * 100) + '% off';
+    $('iapProOff').hidden = !y;
+    $('iapProSub').innerHTML = (y ? 'Billed ' + money(yearTotal(t)) + '/year' : 'Billed monthly') + ' · <strong>' + num(t.c) + ' Credits / month</strong>';
+
+    var track = $('iapTrack');
+    track.style.setProperty('--pos', posFor(state.tier));
+    track.style.setProperty('--ratio', state.tier / (TIERS.length - 1));
+    track.setAttribute('aria-valuenow', t.c);
+    track.setAttribute('aria-valuetext', num(t.c) + ' credits per month');
+    $('iapTip').textContent = num(t.c) + ' credits';
+    Array.prototype.forEach.call($('iapDots').children, function (d, i) {
+      d.classList.toggle('is-passed', i < state.tier); d.classList.toggle('is-current', i === state.tier);
+    });
+    Array.prototype.forEach.call($('iapTicks').children, function (b, i) { b.setAttribute('aria-current', i === state.tier); });
+
+    // 6. Check list
+    var tag = $('iapInclTag');
+    if (state.plan === 'pro') {
+      tag.textContent = 'Pro'; tag.className = 'iap-tag pro';
+      $('iapFeat').innerHTML =
+        li('<b>' + num(t.c) + ' Credits</b> / per month') +
+        li('Watermark-free, High-quality Downloads') +
+        li('Batch Photo Editing') +
+        li('<b>100 GB</b> Cloud Storage') +
+        li('<b>Daily FREE</b> AI Agent Chats for Quick Edits') +
+        li('<b>40% OFF</b> Additional Credit Purchases') +
+        li('Commercial Use Rights Included');
+    } else {
+      tag.textContent = 'Plus'; tag.className = 'iap-tag plus';
+      $('iapFeat').innerHTML =
+        li('<b>100 Credits</b> / per month') +
+        li('Watermark-free, High-quality Downloads') +
+        li('Batch Photo Editing') +
+        li('<b>10 GB</b> Cloud Storage');
+    }
+  }
+
+  // ── Interactions ──────────────────────────────────────────
+  $('iapYearly').addEventListener('click', function () { state.yearly = true; render(); });
+  $('iapMonthly').addEventListener('click', function () { state.yearly = false; render(); });
+  $('iapPlus').addEventListener('click', function () { state.plan = 'plus'; render(); });
+  $('iapPro').addEventListener('click', function (e) { if (e.target.closest('.iap-slider')) return; state.plan = 'pro'; render(); });
+  $('iapSlider').addEventListener('click', function () { if (state.plan !== 'pro') { state.plan = 'pro'; render(); } });
+  // Slider: drag / click snaps to the nearest stop; arrow keys, Home, End
+  var trackEl = $('iapTrack');
+  function indexFromPointer(e) {
+    var r = trackEl.getBoundingClientRect();
+    var ratio = (e.clientX - r.left - 8) / (r.width - 16);
+    return Math.round(Math.max(0, Math.min(1, ratio)) * (TIERS.length - 1));
+  }
+  trackEl.addEventListener('pointerdown', function (e) {
+    stopHint(); trackEl.setPointerCapture(e.pointerId); trackEl.classList.add('dragging'); setTier(indexFromPointer(e));
+  });
+  trackEl.addEventListener('pointermove', function (e) {
+    if (!trackEl.hasPointerCapture(e.pointerId)) return;
+    var i = indexFromPointer(e); if (i !== state.tier) setTier(i);
+  });
+  ['pointerup', 'pointercancel'].forEach(function (ev) { trackEl.addEventListener(ev, function () { trackEl.classList.remove('dragging'); }); });
+  trackEl.addEventListener('keydown', function (e) {
+    var map = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }, last = TIERS.length - 1;
+    if (e.key in map) setTier(Math.max(0, Math.min(last, state.tier + map[e.key])));
+    else if (e.key === 'Home') setTier(0);
+    else if (e.key === 'End') setTier(last);
+    else return;
+    e.preventDefault(); stopHint();
+  });
+
+  // Swipe hint: a finger drags across the stops when the popup opens; any interaction stops it.
+  // While the trail is visible, dots it has reached are hidden so the gradient reads as one fill.
+  var trail = trackEl.querySelector('.hint-trail'), dotsEl = $('iapDots');
+  function coverDots() {
+    var on = trackEl.classList.contains('hinting');
+    var shown = on && parseFloat(getComputedStyle(trail).opacity) > 0.4;
+    var end = trail.getBoundingClientRect().right;
+    Array.prototype.forEach.call(dotsEl.children, function (d) {
+      var r = d.getBoundingClientRect();
+      d.classList.toggle('is-covered', shown && end >= r.left + r.width / 2);
+    });
+    if (on) requestAnimationFrame(coverDots);
+  }
+  var SHOW_SWIPE_HINT = false; // finger swipe hint on open — hidden for now; set true to bring it back
+  function stopHint() { trackEl.classList.remove('hinting'); }
+  function playHint() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    stopHint(); void trackEl.offsetWidth; trackEl.classList.add('hinting'); requestAnimationFrame(coverDots);
+  }
+  trackEl.querySelector('.swipe-hint').addEventListener('animationend', stopHint);
+  ['iapPlus', 'iapPro'].forEach(function (id) {
+    $(id).addEventListener('keydown', function (e) {
+      if (e.target !== e.currentTarget) return;
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); state.plan = id === 'iapPlus' ? 'plus' : 'pro'; render(); }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); state.plan = state.plan === 'plus' ? 'pro' : 'plus'; render(); $(state.plan === 'plus' ? 'iapPlus' : 'iapPro').focus(); }
+    });
+  });
+
+  var toastTimer;
+  function toast(msg) { var el = $('iapToast'); el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.hidden = true; }, 3200); }
+  $('iapCta').addEventListener('click', function () {
+    var t = TIERS[state.tier], p = state.plan === 'pro' ? t : PLUS;
+    var what = state.plan === 'pro' ? 'Pro · ' + num(t.c) + ' Credits/mo' : 'Plus · 100 Credits/mo';
+    toast('Prototype: goes to checkout — ' + what + ' · ' + (state.yearly ? 'Yearly ' + money(yearTotal(p)) : 'Monthly ' + money(p.m)));
+  });
+
+  // AI Agent Connector tooltip: click the info icon to toggle; click elsewhere or Esc closes it
+  var infoBtn = $('iapInfo'), agentTip = $('iapAgentTip');
+  function closeAgentTip() { agentTip.hidden = true; infoBtn.setAttribute('aria-expanded', 'false'); }
+  infoBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    agentTip.hidden = !agentTip.hidden;
+    var row = infoBtn.closest('.iap-agent-row').getBoundingClientRect(), icon = infoBtn.getBoundingClientRect();
+    agentTip.style.setProperty('--arrow-x', (icon.left + icon.width / 2 - row.left) + 'px');
+    infoBtn.setAttribute('aria-expanded', !agentTip.hidden);
+  });
+  document.addEventListener('click', function (e) { if (!agentTip.hidden && !agentTip.contains(e.target)) closeAgentTip(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !agentTip.hidden) { closeAgentTip(); e.stopImmediatePropagation(); } }, true);
+
+  // ── Open / close ──────────────────────────────────────────
+  // Locking scroll hides the page scrollbar; pad body and full-width fixed bars by its width so nothing shifts sideways.
+  var padded = [];
+  function lockScroll() {
+    var sb = window.innerWidth - document.documentElement.clientWidth;
+    var els = [document.body];
+    if (sb > 0) Array.prototype.forEach.call(document.body.querySelectorAll('*'), function (el) {
+      if (el === overlay || overlay.contains(el)) return;
+      var cs = getComputedStyle(el);
+      if (cs.position === 'fixed' && el.getBoundingClientRect().right >= document.documentElement.clientWidth - 1) els.push(el);
+    });
+    padded = sb > 0 ? els.map(function (el) {
+      var prev = el.style.paddingRight;
+      el.style.paddingRight = (parseFloat(getComputedStyle(el).paddingRight) || 0) + sb + 'px';
+      return [el, prev];
+    }) : [];
+    document.body.style.overflow = 'hidden';
+  }
+  function unlockScroll() {
+    document.body.style.overflow = '';
+    padded.forEach(function (e) { e[0].style.paddingRight = e[1]; });
+    padded = [];
+  }
+  window.openIAP = function () {
+    lastFocus = document.activeElement;
+    state.plan = 'pro'; state.yearly = true; state.tier = 0; render();
+    overlay.classList.remove('closing');
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
+    lockScroll();
+    $('iapScroll').scrollTop = 0;
+    setTimeout(function () { $('iapClose').focus({ preventScroll: true }); }, 30);
+    if (SHOW_SWIPE_HINT) setTimeout(playHint, MOBILE.matches ? 700 : 450);
+  };
+  function finishClose() {
+    stopHint(); closeAgentTip();
+    overlay.classList.remove('open', 'closing'); overlay.setAttribute('aria-hidden', 'true');
+    modal.style.transform = ''; modal.style.removeProperty('--drag-y');
+    unlockScroll();
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  window.closeIAP = function () {
+    if (!overlay.classList.contains('open') || overlay.classList.contains('closing')) return;
+    if (MOBILE.matches) { overlay.classList.add('closing'); setTimeout(finishClose, 280); }
+    else finishClose();
+  };
+  $('iapClose').addEventListener('click', window.closeIAP);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) window.closeIAP(); });
+  document.addEventListener('keydown', function (e) {
+    if (!overlay.classList.contains('open')) return;
+    if (e.key === 'Escape') window.closeIAP();
+    if (e.key === 'Tab') {   // keep focus inside the dialog
+      var f = modal.querySelectorAll('button, a[href], input, [tabindex="0"]');
+      f = Array.prototype.filter.call(f, function (el) { return el.offsetParent !== null; });
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+    }
+  });
+
+  // Swipe the top bar down to dismiss (mobile)
+  var top = modal.querySelector('.iap-top'), startY = null, dy = 0;
+  top.addEventListener('pointerdown', function (e) {
+    if (!MOBILE.matches || e.target.closest('.iap-close')) return;
+    startY = e.clientY; dy = 0; modal.style.animation = 'none'; modal.style.transition = 'none';
+    top.setPointerCapture(e.pointerId);
+  });
+  top.addEventListener('pointermove', function (e) {
+    if (startY === null) return;
+    dy = Math.max(0, e.clientY - startY); modal.style.transform = 'translateY(' + dy + 'px)';
+  });
+  function endDrag() {
+    if (startY === null) return;
+    startY = null; modal.style.animation = '';
+    if (dy > 100) { modal.style.setProperty('--drag-y', dy + 'px'); window.closeIAP(); }
+    else { modal.style.transition = 'transform .25s cubic-bezier(.32,.72,0,1)'; modal.style.transform = ''; setTimeout(function () { modal.style.transition = ''; }, 260); }
+  }
+  top.addEventListener('pointerup', endDrag);
+  top.addEventListener('pointercancel', endDrag);
+
+  render();
+})();
+</script>

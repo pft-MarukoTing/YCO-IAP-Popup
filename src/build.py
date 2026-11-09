@@ -1,4 +1,4 @@
-"""Build index.html = YCE homepage snapshot + logged-in header + IAP popup.
+"""Build index.html (A) and b.html (B) = YCE homepage snapshot + logged-in header + IAP popup.
 
     python3 src/build.py
 """
@@ -7,7 +7,6 @@ import pathlib
 SRC = pathlib.Path(__file__).parent
 ROOT = SRC.parent
 snapshot = (SRC / 'yce-home-snapshot.html').read_text(encoding='utf-8')
-popup = (SRC / 'iap-popup.html').read_text(encoding='utf-8')
 
 HEAD = '''
 <!-- ════════ PROTOTYPE additions ════════ -->
@@ -44,6 +43,8 @@ TRIGGER = '''
     el.addEventListener('click', function (e) { e.preventDefault(); openIAP(); });
     el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openIAP(); } });
   });
+  // Prototype opens straight into the popup; closing it and tapping Subscribe brings it back
+  openIAP();
 </script>
 '''
 
@@ -51,10 +52,29 @@ def once(s, a, b):
     assert s.count(a) >= 1, a[:60]
     return s.replace(a, b, 1)
 
-out = snapshot
-out = once(out, '<title>', '<title>[Prototype] IAP Popup · ')
-out = once(out, '</head>', HEAD + '</head>')
-out = once(out, '<div class="headers_container__LC81Q">', HEADER + '<div class="headers_container__LC81Q proto-dt-header">')
-out = once(out, '</body>', popup + TRIGGER + '</body>')
-(ROOT / 'index.html').write_text(out, encoding='utf-8')
-print('built index.html', len(out))
+# Version switcher (bottom-right pill) so A and B can be compared side by side in the browser
+def switcher(current):
+    pill = lambda v, href: (f'<a href="{href}" aria-current="{str(v == current).lower()}">{v}</a>')
+    return (
+        '<style>.proto-ab{position:fixed;right:16px;bottom:16px;z-index:2147483600;display:flex;gap:2px;padding:3px;'
+        'border-radius:20px;background:rgba(21,23,31,.82);font:600 13px/1 Roboto,system-ui,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.2)}'
+        '.proto-ab a{padding:6px 12px;border-radius:16px;color:#fff;text-decoration:none;opacity:.7}'
+        '.proto-ab a[aria-current=true]{background:#fff;color:#15171F;opacity:1}</style>'
+        f'<nav class="proto-ab" aria-label="Prototype version">{pill("A", "index.html")}{pill("B", "b.html")}</nav>'
+    )
+
+# (version, popup source, output file)
+VARIANTS = [
+    ('A', 'iap-popup.html', 'index.html'),
+    ('B', 'iap-popup-b.html', 'b.html'),
+]
+
+for version, src, dest in VARIANTS:
+    popup = (SRC / src).read_text(encoding='utf-8')
+    out = snapshot
+    out = once(out, '<title>', f'<title>[Prototype {version}] IAP Popup · ')
+    out = once(out, '</head>', HEAD + '</head>')
+    out = once(out, '<div class="headers_container__LC81Q">', HEADER + '<div class="headers_container__LC81Q proto-dt-header">')
+    out = once(out, '</body>', popup + TRIGGER + switcher(version) + '</body>')
+    (ROOT / dest).write_text(out, encoding='utf-8')
+    print(f'built {dest} ({version})', len(out))

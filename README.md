@@ -3,7 +3,7 @@
 YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27），含 RWD。
 
 - 背景：yce.perfectcorp.com 首頁的靜態快照（圖片與 CSS 直接引用官網），header 為登入後樣式
-- 觸發：header 的 **Subscribe**（手機版為橘色皇冠）
+- 觸發：頁面載入時直接打開；關閉後可按 header 的 **Subscribe**（手機版為橘色皇冠）再打開
 
 ## 規格對照（p.27）
 
@@ -36,10 +36,12 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 
 ## 檔案
 
-- `index.html`：建置結果（直接開這個）
-- `src/iap-popup.html`：彈窗元件（CSS + HTML + JS）
+- `index.html`：A 版建置結果（直接開這個）
+- `b.html`：B 版建置結果（右下角 A / B 可切換）
+- `src/iap-popup.html`：A 版彈窗元件（CSS + HTML + JS）
+- `src/iap-popup-b.html`：B 版彈窗元件（從 A 複製，用來調整 B 版 UI）
 - `src/yce-home-snapshot.html`：官網首頁快照
-- `src/build.py`：組合成 `index.html` → `python3 src/build.py`
+- `src/build.py`：組合成 `index.html` 和 `b.html` → `python3 src/build.py`
 - `assets/`：官網 icon 字型的本地副本（官網 CDN 不允許跨網域載入字型），以及 slider 用的 `handle-blue.svg`、`coin.svg`、`finger-pointer.svg`（來自 pricing-page-optimization）
 
 ## 本機預覽
