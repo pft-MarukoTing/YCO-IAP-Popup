@@ -223,23 +223,32 @@
       width: 100%; height: 100%; max-height: none; border-radius: 24px;
       animation: iapUp .38s cubic-bezier(.32,.72,0,1);
     }
-    .iap-top { position: relative; top: auto; right: auto; height: 44px; flex-shrink: 0; touch-action: none; cursor: grab; }
-    .iap-handle { display: block; width: 36px; height: 4px; border-radius: 4px; background: var(--c-line); position: absolute; top: 10px; left: 50%; margin-left: -18px; }
-    .iap-close { position: absolute; right: 12px; top: 8px; width: 32px; height: 32px; }
+    .iap-top { position: relative; top: auto; right: auto; height: 32px; flex-shrink: 0; touch-action: none; cursor: grab; }
+    .iap-handle { display: block; width: 36px; height: 4px; border-radius: 4px; background: var(--c-line); position: absolute; top: 8px; left: 50%; margin-left: -18px; }
+    .iap-close { position: absolute; right: 10px; top: 6px; width: 32px; height: 32px; }
     .iap-main { padding: 0 18px 6px; }
-    .iap-title { font-size: 18px; padding-right: 0; min-height: 0; margin-bottom: 14px; }
-    .iap-toggle button { height: 38px; font-size: 14.5px; }
-    .iap-plan { padding: 14px 14px; }
-    .iap-off { top: 14px; right: 14px; }
+    .iap-title { font-size: 18px; padding-right: 0; min-height: 0; margin-bottom: 10px; }
+    .iap-toggle { margin-bottom: 10px; }
+    .iap-plans { gap: 8px; }
+    .iap-toggle button { height: 34px; font-size: 14.5px; }
+    .iap-plan { padding: 12px 14px; }
+    .iap-off { top: 12px; right: 14px; }
+    .iap-price-row { margin-top: 2px; }
+    .iap-slider { margin-top: 10px; padding: 30px 14px 10px; gap: 6px; }
     .iap-price { font-size: 24px; }
     .iap-per, .iap-strike { font-size: 14px; }
     .iap-sub { font-size: 12.5px; }
     .iap-ticks button { font-size: 12px; }
-    .iap-incl { padding: 16px 18px 16px; }
+    .iap-incl { padding: 14px 18px 16px; }
+    .iap-incl-head { padding: 0; margin-bottom: 8px; }
     .iap-incl-head h3 { font-size: 17px; }
-    .iap-feat li { font-size: 14.5px; padding: 8px 10px; gap: 10px; }
+    .iap-feat li { font-size: 14.5px; padding: 6px 10px; gap: 10px; }
     .iap-ck { width: 20px; height: 20px; }
     .iap-foot { padding: 10px 18px 12px; }
+    /* Fade the list into the footer while there's more below; hidden once scrolled to the end */
+    .iap-foot::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 40px; pointer-events: none;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), #fff); transition: opacity .2s; }
+    .iap-modal.at-end .iap-foot::before { opacity: 0; }
     .iap-cta { height: 48px; font-size: 16px; }
     .iap-buy { padding: 10px 0 4px; font-size: 14.5px; }
     #iapOverlay.closing { animation: iapFadeOut .28s ease forwards; }
@@ -486,6 +495,7 @@
         li('Batch Photo Editing') +
         li('<b>10 GB</b> Cloud Storage');
     }
+    if (typeof scrollEl !== 'undefined') updateFade();
   }
 
   // ── Interactions ──────────────────────────────────────────
@@ -567,6 +577,12 @@
   document.addEventListener('click', function (e) { if (!agentTip.hidden && !agentTip.contains(e.target)) closeAgentTip(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !agentTip.hidden) { closeAgentTip(); e.stopImmediatePropagation(); } }, true);
 
+  // Phone/tablet: drop the footer fade once the list is scrolled to the end
+  var scrollEl = $('iapScroll');
+  function updateFade() { modal.classList.toggle('at-end', scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 4); }
+  scrollEl.addEventListener('scroll', updateFade, { passive: true });
+  window.addEventListener('resize', updateFade);
+
   // ── Open / close ──────────────────────────────────────────
   // Locking scroll hides the page scrollbar; pad body and full-width fixed bars by its width so nothing shifts sideways.
   var padded = [];
@@ -597,7 +613,7 @@
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
     lockDesktopHeight();
     lockScroll();
-    $('iapScroll').scrollTop = 0;
+    $('iapScroll').scrollTop = 0; updateFade();
     // Focus the dialog itself (not the close button) so no focus ring shows on open
     setTimeout(function () { modal.focus({ preventScroll: true }); }, 30);
     if (SHOW_SWIPE_HINT) setTimeout(playHint, MOBILE.matches ? 700 : 450);
