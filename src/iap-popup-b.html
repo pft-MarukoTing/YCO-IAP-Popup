@@ -288,6 +288,25 @@
   #iapOverlay[data-plan="pro"] .iap-cta { background: var(--pro-gradient) !important; box-shadow: 0 8px 22px rgba(255,136,0,.3); }
   #iapOverlay[data-plan="pro"] .iap-cta:hover { box-shadow: 0 12px 28px rgba(255,136,0,.38); }
 
+  /* ── B phone: checklist lives inside the selected plan card, first 3 items + expand arrow ── */
+  .iap-card-feat { display: none; }
+  @media (max-width: 599px) {
+    .iap-card-feat { display: block; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--c-line); cursor: default; }
+    .iap-card-feat .iap-feat { gap: 2px; }
+    .iap-card-feat .iap-feat li { margin: 0 -8px; padding: 5px 8px; font-size: 14px; }
+    .iap-card-feat:not(.open) .iap-feat li:nth-child(n+4) { display: none; }
+    .iap-feat-toggle { display: flex !important; align-items: center; gap: 4px; margin: 4px auto 0 !important; padding: 6px 12px !important;
+      border-radius: 20px; font-size: 13.5px; font-weight: 600; color: var(--c-text-2) !important; }
+    .iap-feat-toggle[hidden] { display: none !important; }
+    .iap-feat-toggle svg { width: 16px; height: 16px; transition: transform .2s; }
+    .iap-card-feat.open .iap-feat-toggle svg { transform: rotate(180deg); }
+    .iap-feat-toggle:hover { background: var(--c-fill) !important; }
+    /* the separate "What's included" heading isn't needed once the list is in the card */
+    .iap-incl-head { display: none; }
+    .iap-incl { padding-top: 4px; }
+    .iap-agent { margin-top: 8px; }
+  }
+
   @media (prefers-reduced-motion: reduce) { #iapOverlay, #iapOverlay * { animation-duration: 1ms !important; } }
 </style>
 
@@ -411,6 +430,36 @@
   var overlay = $('iapOverlay'), modal = overlay.querySelector('.iap-modal');
   var MOBILE = window.matchMedia('(max-width: 599px)');
   var DESKTOP = window.matchMedia('(min-width: 900px)');
+  var featList = $('iapFeat'), inclHead = overlay.querySelector('.iap-incl-head');
+  var featWrap = document.createElement('div');
+  featWrap.className = 'iap-card-feat';
+  featWrap.innerHTML = '<button type="button" class="iap-feat-toggle" aria-expanded="false" aria-controls="iapFeat"><span></span>' +
+    '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+  var featToggle = featWrap.querySelector('button');
+  function updateFeatToggle() {
+    var n = featList.children.length, open = featWrap.classList.contains('open');
+    featToggle.hidden = n <= 3;
+    featToggle.querySelector('span').textContent = open ? 'Show less' : 'Show all ' + n + ' features';
+    featToggle.setAttribute('aria-expanded', open);
+  }
+  function placeFeat() {
+    if (MOBILE.matches) {
+      var card = state.plan === 'pro' ? $('iapPro') : $('iapPlus');
+      if (featWrap.parentNode !== card) card.appendChild(featWrap);
+      if (featList.parentNode !== featWrap) featWrap.insertBefore(featList, featToggle);
+      updateFeatToggle();
+    } else {
+      if (featList.previousElementSibling !== inclHead) inclHead.after(featList);
+      if (featWrap.parentNode) featWrap.remove();
+    }
+  }
+  featToggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    featWrap.classList.toggle('open');
+    updateFeatToggle();
+    if (typeof updateFade === 'function') updateFade();
+  });
+  if (MOBILE.addEventListener) MOBILE.addEventListener('change', placeFeat); else MOBILE.addListener(placeFeat);
   // Desktop: hold the popup at its Pro height so switching to Plus (shorter list, no slider) doesn't make it jump
   function lockDesktopHeight() {
     if (!DESKTOP.matches) { modal.style.minHeight = ''; return; }
@@ -495,6 +544,7 @@
         li('Batch Photo Editing') +
         li('<b>10 GB</b> Cloud Storage');
     }
+    placeFeat();
     if (typeof scrollEl !== 'undefined') updateFade();
   }
 
@@ -608,6 +658,7 @@
   }
   window.openIAP = function () {
     lastFocus = document.activeElement;
+    featWrap.classList.remove('open');
     state.plan = 'pro'; state.yearly = true; state.tier = 0; render();
     overlay.classList.remove('closing');
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
