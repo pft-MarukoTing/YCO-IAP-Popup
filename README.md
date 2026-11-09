@@ -26,7 +26,7 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 | Yearly | $39.99 | $95.99 | $249.99 | $429.99 | $649.99 | $1,199.99 | $2,399.99 |
 | Yearly/12 | $3.33 | $7.99 | $20.83 | $35.83 | $54.17 | $99.99 | $199.99 |
 
-方案敘述 Monthly / Yearly 相同；Pro 第一列點數跟著 slider。設定都在 `src/iap-popup-c.html` / `src/iap-popup-d.html` 的 script 開頭（`PLUS`、`TIERS`、`LINKS`）。
+方案敘述 Monthly / Yearly 相同；Pro 第一列點數跟著 slider。設定都在 `src/iap-popup.html` 的 script 開頭（`PLUS`、`TIERS`、`LINKS`）。
 
 ## RWD
 
@@ -36,13 +36,11 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 
 ## 檔案
 
-- `index.html`：自動轉到 `c.html`
-- `c.html`：C 版建置結果（右下角 C / D 可切換；桌機橘色 Pro + 填色選取，手機 What's included 在下方；Yearly 標籤在 Monthly 時桃紅底、選 Yearly 後淡桃紅底 + 桃紅字，方案卡折扣桃紅底白字）
-- `d.html`：D 版建置結果（同 C，但 Yearly 標籤桃紅色，方案卡折扣改淡桃紅底 + 桃紅字）
-- `src/iap-popup-c.html`：C 版彈窗元件（CSS + HTML + JS）
-- `src/iap-popup-d.html`：D 版彈窗元件（從 C 複製）
+- `index.html`：建置結果（直接開這個；桌機橘色 Pro + 填色選取，手機 What's included 在下方；Yearly 標籤在 Monthly 時桃紅底、選 Yearly 後淡桃紅底 + 桃紅字，方案卡折扣桃紅底白字）
+- `c.html`、`d.html`：舊版本連結，自動轉到 `index.html`
+- `src/iap-popup.html`：彈窗元件（CSS + HTML + JS）
 - `src/yce-home-snapshot.html`：官網首頁快照
-- `src/build.py`：組合成 `c.html`、`d.html`，`index.html` 轉到 C → `python3 src/build.py`
+- `src/build.py`：組合成 `index.html` → `python3 src/build.py`
 - `assets/`：官網 icon 字型的本地副本（官網 CDN 不允許跨網域載入字型），以及 slider 用的 `handle-blue.svg`、`coin.svg`、`finger-pointer.svg`（來自 pricing-page-optimization）
 
 ## 本機預覽
