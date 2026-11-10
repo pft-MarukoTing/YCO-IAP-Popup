@@ -90,7 +90,7 @@
   .iap-plan-name { font-size: 18px; font-weight: 700; }
   .iap-tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
   .iap-tag.plus { background: rgba(3,173,226,.12); color: var(--c-brand-dark); }
-  .iap-tag.pro { background: linear-gradient(135deg, #FF8C00, #FFA726); color: #fff; }
+  .iap-tag.pro { background: var(--pro-tag, linear-gradient(135deg, #FF8C00, #FFA726)); color: #fff; }
   .iap-price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
   .iap-price { font-size: 28px; font-weight: 700; color: var(--c-brand); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .iap-per { font-size: 15px; color: var(--c-text-3); }
@@ -277,40 +277,34 @@
   @keyframes iapUp { from { transform: translateY(100%); } }
   @keyframes iapDown { from { transform: translateY(var(--drag-y, 0px)); } to { transform: translateY(100%); } }
   /* ── Pro in orange (accents from pricing-page-optimization's "Get Pro Pack") ── */
-  #iapOverlay { --c-pro: #FF8800; --c-pro-text: #EA7D00; --c-pro-soft: #FFF3E5;
-    --pro-gradient: linear-gradient(88.46deg, #FFB802 0%, #FFA51C 32.565%, #FF8800 99.797%); }
-  /* Pro card: orange price, radio and selected state */
-  /* Selected state (border, outer ring, radio) uses the brand blue for both plans */
+  #iapOverlay { --c-pro: #FF8800; --c-pro-rgb: 255, 136, 0; --c-pro-text: #EA7D00; --c-pro-soft: #FFF3E5;
+    --pro-gradient: linear-gradient(88.46deg, #FFB802 0%, #FFA51C 32.565%, #FF8800 99.797%);
+    --pro-tag: linear-gradient(135deg, #FF8C00, #FFA726); }
+  /* Black Friday: the Pro card keeps the Pro orange; only Subscribe Now (Pro selected) runs from orange to red */
+  #iapOverlay[data-holiday="black-friday"] {
+    --pro-cta: linear-gradient(110deg, #FF9A00 0%, #FF6A1A 40%, #E01E37 100%);   /* top-left → bottom-right */ --pro-cta-rgb: 239, 74, 43; }
+  /* Pro card in the Pro colour (orange; red for Christmas / Black Friday): price, selected border / ring / radio,
+     white → light-tint fill, the credit slider and Subscribe Now while Pro is selected. The checklist stays blue. */
+  #iapPro .iap-price { color: var(--c-pro-text); }
+  #iapPro .iap-radio::after { background: var(--c-pro); }
+  #iapPro[aria-checked="true"] { border-color: var(--c-pro); box-shadow: 0 0 0 4px rgba(var(--c-pro-rgb), .12);
+    background: linear-gradient(to bottom right, #fff 0%, var(--c-pro-soft) 100%); }
+  #iapPro[aria-checked="true"] .iap-radio { border-color: var(--c-pro); }
+  #iapOverlay[data-plan="pro"] .iap-cta { background: var(--pro-cta, var(--pro-gradient)) !important; box-shadow: 0 8px 22px rgba(var(--pro-cta-rgb, var(--c-pro-rgb)), .3); }
+  #iapOverlay[data-plan="pro"] .iap-cta:hover { box-shadow: 0 12px 28px rgba(var(--pro-cta-rgb, var(--c-pro-rgb)), .38); }
   /* Credit slider (always Pro) */
-  /* Slider in the Subscribe Now colours: one blue → green gradient along the whole track.
-     The fill, the passed dots and the handle each take the colour at their own position,
-     so the slider is blue at 300 and turns green towards 10,000. */
-  .iap-slider { border-color: rgba(3,173,226,.2); background: var(--c-white); }
-  .iap-track { --hc: color-mix(in srgb, #4CD137 calc(var(--ratio) * 100%), #03ADE2); }
-  .iap-track .progress { background: linear-gradient(90deg, #03ADE2, var(--hc)); }
-  .iap-track .dots i.is-passed { background: color-mix(in srgb, #4CD137 calc(var(--r) * 100%), #03ADE2); }
+  .iap-slider { border-color: rgba(var(--c-pro-rgb), .2); background: var(--c-white); }
+  .iap-track { --hc: var(--c-pro); }
+  .iap-track .progress { background: var(--pro-gradient); }
+  .iap-track .dots i.is-passed { background: var(--c-pro); }
   .iap-track .handle { border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--hc) 80%, #fff); }
   .iap-track:not(.dragging) .handle { transition: left .18s ease, transform .15s, box-shadow .18s ease; }
-  .iap-track:focus-visible .handle { box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--hc) 80%, #fff), 0 0 0 3px rgba(3,173,226,.35); }
-  .iap-track .hint-trail { background: linear-gradient(90deg, rgba(3,173,226,0) 0%, rgba(3,173,226,.25) 40%, #4CD137 100%); }
+  .iap-track:focus-visible .handle { box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--hc) 80%, #fff), 0 0 0 3px rgba(var(--c-pro-rgb), .35); }
+  .iap-track .hint-trail { background: linear-gradient(90deg, rgba(var(--c-pro-rgb), 0) 0%, rgba(var(--c-pro-rgb), .25) 40%, var(--c-pro) 100%); }
   /* Plus tag: gradient blue with white text (pricing-page-optimization's .mini-tag.plus) */
   .iap-tag.plus { color: #fff; background: linear-gradient(34deg, rgba(68,227,237,.8) 2.43%, rgba(3,173,226,.8) 67.21%), #fff; }
-  /* Selected card fill — Plus: white → light blue; Pro: light blue → light green (Subscribe Now colours). Slider stays white. */
+  /* Plus selected: white → light blue */
   #iapPlus[aria-checked="true"] { background: linear-gradient(to bottom right, #fff 0%, var(--c-brand-soft) 100%); }
-  #iapPro[aria-checked="true"] { background: linear-gradient(to bottom right, #E8F6FC 0%, #EDF9EA 100%); }
-  /* ── Version B (?variant=b): the orange Pro card from before — orange price, selected border / ring / radio,
-     white → light-orange fill and an orange credit slider. Checklist and Subscribe Now stay blue in both versions. ── */
-  #iapOverlay[data-variant="b"] #iapPro .iap-price { color: var(--c-pro-text); }
-  #iapOverlay[data-variant="b"] #iapPro .iap-radio::after { background: var(--c-pro); }
-  #iapOverlay[data-variant="b"] #iapPro[aria-checked="true"] { border-color: var(--c-pro); box-shadow: 0 0 0 4px rgba(255,136,0,.12);
-    background: linear-gradient(to bottom right, #fff 0%, var(--c-pro-soft) 100%); }
-  #iapOverlay[data-variant="b"] #iapPro[aria-checked="true"] .iap-radio { border-color: var(--c-pro); }
-  #iapOverlay[data-variant="b"] .iap-slider { border-color: rgba(255,136,0,.2); }
-  #iapOverlay[data-variant="b"] .iap-track { --hc: #FF8800; }
-  #iapOverlay[data-variant="b"] .iap-track .progress { background: var(--pro-gradient); }
-  #iapOverlay[data-variant="b"] .iap-track .dots i.is-passed { background: var(--c-pro); }
-  #iapOverlay[data-variant="b"] .iap-track .hint-trail { background: linear-gradient(90deg, rgba(255,136,0,0) 0%, rgba(255,165,28,.25) 40%, var(--c-pro) 100%); }
-  #iapOverlay[data-variant="b"] .iap-track:focus-visible .handle { box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--hc) 80%, #fff), 0 0 0 3px rgba(255,136,0,.35); }
   /* Very narrow phones (≤ 360px): smaller slider labels and a slimmer box so 1,500 / 2,500 / 5,000 / 10,000 don't run together */
   @media (max-width: 360px) {
     .iap-slider { padding-left: 10px; padding-right: 10px; }
@@ -380,7 +374,7 @@
     --hol-tint-solid: #F2F2F2;
     --hol-deal: linear-gradient(90deg, #E4C684 10.5%, #CAA140 53.21%, #E4C684 91%); /* gold */
     --hol-title: #fff;
-    --hol-count: #fff; --hol-count-bg: transparent; --hol-count-border: #fff;
+    --hol-count: #fff; --hol-count-bg: rgba(0,0,0,.6); --hol-count-border: #fff;   /* translucent black so the dot pattern doesn't fight the digits */
     --hol-card-shadow: rgba(0,0,0,.45);
     --hol-compare-border: #fff;
   }
@@ -668,7 +662,7 @@
   });
   // Handle centre sits on the tick centres: 8px from each edge, equal gaps.
   var posFor = function (i) { return 'calc(8px + (100% - 16px) * ' + (i / (TIERS.length - 1)) + ')'; };
-  $('iapDots').innerHTML = TIERS.map(function (_, i) { return '<i style="left:' + posFor(i) + ';--r:' + (i / (TIERS.length - 1)) + '"></i>'; }).join('');
+  $('iapDots').innerHTML = TIERS.map(function (_, i) { return '<i style="left:' + posFor(i) + '"></i>'; }).join('');
 
   function setTier(i) { state.tier = i; state.plan = 'pro'; render(); }
 
