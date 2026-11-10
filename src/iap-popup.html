@@ -284,8 +284,8 @@
   .iap-tag.plus { color: #fff; background: linear-gradient(34deg, rgba(68,227,237,.8) 2.43%, rgba(3,173,226,.8) 67.21%), #fff; }
   /* Selected card: A's filled style — Plus in brand-soft, Pro in soft orange; slider stays white */
   #iapPro[aria-checked="true"] { background: var(--c-pro-soft); }
-  /* Credit slider only shows while Pro is selected */
-  #iapPro[aria-checked="false"] .iap-slider { display: none; }
+  /* Credit slider: always visible on desktop / tablet; on phone it collapses while Plus is selected */
+  @media (max-width: 599px) { #iapPro[aria-checked="false"] .iap-slider { display: none; } }
   /* All three discount badges use the pricing page's "Save" badge: Fill/Badge pink, white text,
      1px Stroke/Inverse strong border (white 60%), 14px semibold (13px on phone) */
   .iap-save, .iap-off { background: #F23B77; color: #fff; border: 1px solid rgba(255,255,255,.6); border-radius: 32px;
