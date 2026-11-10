@@ -84,8 +84,8 @@ HOLIDAY_SWITCH = (
     '})();</script>'
 )
 
-# Version switcher (bottom-right, always visible; sits above the holiday switcher in review mode): A = Pro checklist + CTA in orange,
-# B = Pro checklist + CTA stay blue. ?variant=b opens B directly; the URL follows the choice.
+# Version switcher (bottom-right, always visible; sits above the holiday switcher in review mode): A = all blue (blue Pro card, blue → green slider),
+# B = orange Pro card and orange slider. ?variant=b opens B directly; the URL follows the choice.
 VARIANT_SWITCH = (
     '<style>'
     '.proto-variant{position:fixed;right:16px;bottom:16px;z-index:2147483600;display:flex;align-items:center;gap:2px;padding:3px 3px 3px 12px;'
