@@ -3,6 +3,7 @@
     python3 src/build.py
 """
 import pathlib
+import re
 
 SRC = pathlib.Path(__file__).parent
 ROOT = SRC.parent
@@ -93,6 +94,20 @@ out = once(out, '<title>', '<title>[Prototype] IAP Popup · ')
 out = once(out, '</head>', HEAD + '</head>')
 out = once(out, '<div class="headers_container__LC81Q">', HEADER + '<div class="headers_container__LC81Q proto-dt-header">')
 out = once(out, '</body>', popup + TRIGGER + HOLIDAY_SWITCH + '</body>')
+
+# No link leads to the live sites: every <a> pointing at a production domain opens the
+# pricing page prototype in a new tab instead.
+PROTOTYPE_URL = 'https://pricing-page-optimization.vercel.app/?discount=off'
+LIVE = re.compile(r'https?://(?:[\w-]+\.)*(?:perfectcorp\.com|youcamapps\.com|makeupar\.com)\b[^"]*')
+def to_prototype(m):
+    tag = m.group(0)
+    if not LIVE.search(tag):
+        return tag
+    tag = re.sub(r'\s(?:target|rel)="[^"]*"', '', tag)
+    tag = re.sub(r'href="[^"]*"', f'href="{PROTOTYPE_URL}"', tag)
+    return tag[:-1] + ' target="_blank" rel="noopener">'
+out = re.sub(r'<a\b[^>]*\bhref="[^"]*"[^>]*>', to_prototype, out)
+assert not re.search(r'<a\b[^>]*href="' + LIVE.pattern, out), 'live link left in index.html'
 (ROOT / 'index.html').write_text(out, encoding='utf-8')
 print('built index.html', len(out))
 

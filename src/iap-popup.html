@@ -551,12 +551,13 @@
     { c: 5000,  m: 164.99, y: 1199.99, mo: 99.99  },
     { c: 10000, m: 319.99, y: 2399.99, mo: 199.99 }
   ];
+  // Every link goes to the pricing page prototype (never the live site) and opens in a new tab.
   var PRICING_URL = 'https://pricing-page-optimization.vercel.app/?discount=off';
   var LINKS = {
-    compare: PRICING_URL + '&tab=sub',            // 7. Pricing page — Subscription tab
-    buy:     'https://yce.perfectcorp.com/pricing?pay=true',  // 8. Live YCE pricing page, opens on the Pay As You Go tab
-    usage:   PRICING_URL + '#cmp-ai-agent',
-    explore: 'https://yce.perfectcorp.com/products/youcam-for-ai-assistants'
+    compare: PRICING_URL + '&tab=sub#compare',       // 7. Subscription tab, scrolled to the comparison table
+    buy:     PRICING_URL + '&tab=payg',              // 8. Pay As You Go tab
+    usage:   PRICING_URL + '&tab=sub#cmp-ai-agent',  // AI Agent rows of the comparison table
+    explore: PRICING_URL + '&tab=sub#cmp-ai-agent'   // no prototype page for AI Agent Connector yet
   };
 
   var state = { plan: 'pro', yearly: true, tier: 0 };

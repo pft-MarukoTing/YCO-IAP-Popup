@@ -15,8 +15,8 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 | 4 | 年訂閱總價 · 每月點數 | Plus 固定 100；Pro 跟著 slider |
 | 5 | Pro 點數 slider | 300 / 800 / 1,500 / 2,500 / 5,000 / 10,000，月均價、年總價、點數同步更新。UI 同 pricing page（藍色軌道＋刻度點、點數 tooltip、開啟時的手指滑動提示） |
 | 6 | Check list | Plus 4 項、Pro 7 項（依「Plus/Pro 方案敘述」），Pro 第一列點數跟著 slider |
-| 7 | View Full Feature Comparison | 開 Pricing Page — Subscription tab |
-| 8 | Buy Credits | 開 Pricing Page — Pay as you go tab |
+| 7 | View Full Feature Comparison | 新分頁開 pricing page prototype 的 Subscription tab，並自動捲到 Compare All Plans（`?tab=sub#compare`） |
+| 8 | Buy Credits | 新分頁開 pricing page prototype 的 Pay As You Go tab（`?tab=payg`） |
 
 價格依 PM 文件「Pro Plan with more credit pack - Pricing」（YCO Proposal 2，USD），Pro Yearly 預設 300 credits/month（$95.99）：
 
@@ -27,6 +27,10 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 | Yearly/12 | $3.33 | $7.99 | $20.83 | $35.83 | $54.17 | $99.99 | $199.99 |
 
 方案敘述 Monthly / Yearly 相同；Pro 第一列點數跟著 slider。設定都在 `src/iap-popup.html` 的 script 開頭（`PLUS`、`TIERS`、`LINKS`）。
+
+## 連結
+
+頁面上所有連結都不連正式網站：一律在新分頁開 pricing page prototype（https://pricing-page-optimization.vercel.app/?discount=off）。首頁快照裡指向 perfectcorp.com / youcamapps.com 的連結在 `src/build.py` 建置時統一改寫。
 
 ## RWD
 
