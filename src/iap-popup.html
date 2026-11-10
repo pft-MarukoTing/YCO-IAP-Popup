@@ -448,14 +448,20 @@
   /* Checklist + CTA follow the selected plan (version A). Version B (data-variant="b") keeps them blue. */
   #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-feat li:first-child { background: var(--c-pro-soft); }
   #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-feat b { color: var(--c-pro-text); }
-  #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-ck { background: var(--c-pro); }
   #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-cta { background: var(--pro-gradient) !important; box-shadow: 0 8px 22px rgba(255,136,0,.3); }
-  /* Version A: check marks in black at 50% opacity, 75% size (22 → 16.5px, phone 20 → 15px), nudged down to sit on the first text line */
-  #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck { background: rgba(21,23,31,.5); width: 16.5px; height: 16.5px; margin-top: 3px; }
-  #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck svg { width: 9px; height: 9px; }
+  /* Check marks in both versions: 75% size (22 → 16.5px, phone 20 → 15px), nudged down to sit on the first text line */
+  #iapOverlay[data-plan] .iap-ck { width: 16.5px; height: 16.5px; margin-top: 3px; }
+  #iapOverlay[data-plan] .iap-ck svg { width: 9px; height: 9px; }
   @media (max-width: 599px) {
-    #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck { width: 15px; height: 15px; }
+    #iapOverlay[data-plan] .iap-ck { width: 15px; height: 15px; }
   }
+  /* Version A: no circle, just the tick in the plan colour (blue for Plus, orange for Pro), drawn larger to fill the box.
+     Version B keeps the white tick on a blue circle. */
+  #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck { background: none; }
+  #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck svg { width: 15px; height: 15px; }
+  #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck path { stroke: var(--c-brand); stroke-width: 2; }
+  #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-ck path { stroke: var(--c-pro); }
+  @media (max-width: 599px) { #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck svg { width: 14px; height: 14px; } }
   #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-cta:hover { box-shadow: 0 12px 28px rgba(255,136,0,.38); }
 
 
