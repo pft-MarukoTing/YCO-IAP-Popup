@@ -42,7 +42,7 @@ YouCam Online Editor 首頁的 IAP 訂閱彈窗 prototype（依 PM 文件 p.27�
 
 - `index.html`：建置結果（直接開這個；桌機橘色 Pro + 填色選取，手機 What's included 在下方；Yearly 標籤在 Monthly 時桃紅底、選 Yearly 後淡桃紅底 + 桃紅字，方案卡折扣桃紅底白字）
 - `c.html`、`d.html`：舊版本連結，自動轉到 `index.html`
-- 節慶主題（預設隱藏，一般網址只會看到 Default；網址加 `?review=1` 才會出現切換器）：右下角切換 Default / Christmas / Year End / Halloween / Black Friday（`?review=1&holiday=christmas` 可直接開某個主題）。目前完成 Christmas、Year End、Halloween、Black Friday（同一套版面，只換主題變數）：桌機右欄換成節慶插畫底 + 倒數 + Flash Sales / UP TO 50% off + 白卡清單；平板、手機在標題下方放橫幅（參考 Figma YCO_Content（Product Pages）舊版節慶 popup）。素材在 `assets/christmas/`、`assets/year-end/`、`assets/halloween/`、`assets/black-friday/`
+- 節慶主題：右下角切換列一直顯示，可切換 Default / Christmas / Year End / Halloween / Black Friday（`?holiday=christmas` 可直接開某個主題；舊的 `?review=1` 連結照樣可用）。目前完成 Christmas、Year End、Halloween、Black Friday（同一套版面，只換主題變數）：桌機右欄換成節慶插畫底 + 倒數 + Flash Sales / UP TO 50% off + 白卡清單；平板、手機在標題下方放橫幅（參考 Figma YCO_Content（Product Pages）舊版節慶 popup）。素材在 `assets/christmas/`、`assets/year-end/`、`assets/halloween/`、`assets/black-friday/`
 - `src/iap-popup.html`：彈窗元件（CSS + HTML + JS）
 - `src/yce-home-snapshot.html`：官網首頁快照
 - `src/build.py`：組合成 `index.html` → `python3 src/build.py`

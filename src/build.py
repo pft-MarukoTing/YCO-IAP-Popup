@@ -50,8 +50,8 @@ TRIGGER = '''
 '''
 
 # Holiday theme switcher (bottom-right) for reviewing the holiday UIs.
-# Hidden by default: the page always shows the default popup. Add ?review=1 to the URL to get the switcher and the
-# holiday themes (?review=1&holiday=christmas opens a theme directly). Sets data-holiday on #iapOverlay ("" = default).
+# Always visible; the page opens on the default popup. ?holiday=christmas opens a theme directly.
+# Sets data-holiday on #iapOverlay ("" = default).
 HOLIDAYS = [('', 'Default'), ('christmas', 'Christmas'), ('year-end', 'Year End'), ('halloween', 'Halloween'), ('black-friday', 'Black Friday')]
 HOLIDAY_SWITCH = (
     '<style>'
@@ -70,7 +70,6 @@ HOLIDAY_SWITCH = (
     '</nav>'
     '<script>(function () {'
     '  var q = new URLSearchParams(location.search);'
-    '  if (q.get("review") !== "1") return;'   # not in review mode: no switcher, no holiday theme
     '  document.documentElement.classList.add("proto-review");'
     '  var overlay = document.getElementById("iapOverlay"), btns = document.querySelectorAll(".proto-holiday button");'
     '  function apply(h) {'
