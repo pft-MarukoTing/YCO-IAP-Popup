@@ -41,6 +41,14 @@
     display: grid; grid-template-columns: 384px 1fr; grid-template-rows: 1fr auto;
     grid-template-areas: "main incl" "foot incl";
   }
+  /* Desktop on a short screen: the whole popup scales down to fit (--fit, set by JS, 1 → 0.8).
+     Only below 80% does it fall back to the scrolling layout, where the footer sits over the plans. */
+  @media (min-width: 900px) {
+    .iap-modal {
+      transform: scale(var(--fit, 1)); transform-origin: center center;
+      max-height: calc((100vh - 48px) / var(--fit, 1)); max-height: calc((100dvh - 48px) / var(--fit, 1));
+    }
+  }
   .iap-scroll { display: contents; }
   .iap-main { grid-area: main; background: var(--c-panel); padding: 28px 28px 8px; overflow-y: auto; border-right: 1px solid var(--c-line); }
   .iap-incl { grid-area: incl; padding: 28px 28px 24px; overflow-y: auto; }
@@ -286,6 +294,9 @@
   .iap-tag.plus { color: #fff; background: linear-gradient(34deg, rgba(68,227,237,.8) 2.43%, rgba(3,173,226,.8) 67.21%), #fff; }
   /* Selected card: A's filled style — Plus in brand-soft, Pro in soft orange; slider stays white */
   #iapPro[aria-checked="true"] { background: var(--c-pro-soft); }
+  /* Selected card fill: white at the top-left fading to the plan colour at the bottom-right */
+  #iapPlus[aria-checked="true"] { background: linear-gradient(to bottom right, #fff 0%, var(--c-brand-soft) 100%); }
+  #iapPro[aria-checked="true"] { background: linear-gradient(to bottom right, #fff 0%, var(--c-pro-soft) 100%); }
   /* Credit slider: always visible on desktop / tablet; on phone it collapses while Plus is selected */
   @media (max-width: 599px) { #iapPro[aria-checked="false"] .iap-slider { display: none; } }
   /* All three discount badges use the pricing page's "Save" badge: Fill/Badge pink, white text,
@@ -434,12 +445,18 @@
     #iapOverlay.has-holiday .iap-hol-title { font-size: 17px; }
     #iapOverlay.has-holiday .iap-hol-count { padding: 2px 10px; font-size: 13px; }
   }
-  /* Checklist + CTA follow the selected plan */
-  #iapOverlay[data-plan="pro"] .iap-feat li:first-child { background: var(--c-pro-soft); }
-  #iapOverlay[data-plan="pro"] .iap-feat b { color: var(--c-pro-text); }
-  #iapOverlay[data-plan="pro"] .iap-ck { background: var(--c-pro); }
-  #iapOverlay[data-plan="pro"] .iap-cta { background: var(--pro-gradient) !important; box-shadow: 0 8px 22px rgba(255,136,0,.3); }
-  #iapOverlay[data-plan="pro"] .iap-cta:hover { box-shadow: 0 12px 28px rgba(255,136,0,.38); }
+  /* Checklist + CTA follow the selected plan (version A). Version B (data-variant="b") keeps them blue. */
+  #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-feat li:first-child { background: var(--c-pro-soft); }
+  #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-feat b { color: var(--c-pro-text); }
+  #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-ck { background: var(--c-pro); }
+  #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-cta { background: var(--pro-gradient) !important; box-shadow: 0 8px 22px rgba(255,136,0,.3); }
+  /* Version A: check marks in black at 50% opacity, 75% size (22 → 16.5px, phone 20 → 15px), nudged down to sit on the first text line */
+  #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck { background: rgba(21,23,31,.5); width: 16.5px; height: 16.5px; margin-top: 3px; }
+  #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck svg { width: 9px; height: 9px; }
+  @media (max-width: 599px) {
+    #iapOverlay[data-plan]:not([data-variant="b"]) .iap-ck { width: 15px; height: 15px; }
+  }
+  #iapOverlay[data-plan="pro"]:not([data-variant="b"]) .iap-cta:hover { box-shadow: 0 12px 28px rgba(255,136,0,.38); }
 
 
   @media (prefers-reduced-motion: reduce) { #iapOverlay, #iapOverlay * { animation-duration: 1ms !important; } }
@@ -579,11 +596,18 @@
   var MOBILE = window.matchMedia('(max-width: 599px)');
   var DESKTOP = window.matchMedia('(min-width: 900px)');
   // Desktop: hold the popup at its Pro height so switching to Plus (shorter list, no slider) doesn't make it jump
+  // Short screens: measure the popup's natural (Pro) height and scale it to fit, but never below 80%.
+  var FIT_MIN = 0.8;
   function lockDesktopHeight() {
-    if (!DESKTOP.matches) { modal.style.minHeight = ''; return; }
+    if (!DESKTOP.matches) { modal.style.minHeight = ''; modal.style.removeProperty('--fit'); return; }
     if (state.plan !== 'pro') return;
-    modal.style.minHeight = '';
-    modal.style.minHeight = modal.offsetHeight + 'px';
+    modal.style.minHeight = ''; modal.style.maxHeight = 'none'; modal.style.setProperty('--fit', '1');
+    var natural = modal.offsetHeight;
+    modal.style.maxHeight = '';
+    var avail = window.innerHeight - 48;   // overlay padding 24px top + bottom
+    var fit = Math.max(FIT_MIN, Math.min(1, avail / natural));
+    modal.style.setProperty('--fit', fit.toFixed(4));
+    modal.style.minHeight = Math.min(natural, avail / fit) + 'px';
   }
   window.addEventListener('resize', lockDesktopHeight);
 

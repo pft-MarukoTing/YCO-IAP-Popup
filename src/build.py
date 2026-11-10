@@ -84,6 +84,38 @@ HOLIDAY_SWITCH = (
     '})();</script>'
 )
 
+# Version switcher (bottom-right, always visible; sits above the holiday switcher in review mode): A = Pro checklist + CTA in orange,
+# B = Pro checklist + CTA stay blue. ?variant=b opens B directly; the URL follows the choice.
+VARIANT_SWITCH = (
+    '<style>'
+    '.proto-variant{position:fixed;right:16px;bottom:16px;z-index:2147483600;display:flex;align-items:center;gap:2px;padding:3px 3px 3px 12px;'
+    'border-radius:20px;background:rgba(21,23,31,.82);color:rgba(255,255,255,.6);font:600 13px/1 Roboto,system-ui,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.2)}'
+    '.proto-variant span{margin-right:6px}'
+    '.proto-variant button{width:30px;height:26px;border:0;border-radius:14px;background:none;color:#fff;font:inherit;opacity:.7;cursor:pointer}'
+    '.proto-variant button:hover{opacity:1}'
+    '.proto-variant button[aria-pressed=true]{background:#fff;color:#15171F;opacity:1}'
+    'html.proto-review .proto-variant{bottom:56px}'
+    '@media (max-width:599px){.proto-variant{right:8px;bottom:calc(8px + env(safe-area-inset-bottom));font-size:12px}'
+    'html.proto-review .proto-variant{bottom:calc(46px + env(safe-area-inset-bottom))}'
+    'html.proto-variant-on #iapOverlay{padding-bottom:calc(48px + env(safe-area-inset-bottom)) !important}'
+    'html.proto-review.proto-variant-on #iapOverlay{padding-bottom:calc(86px + env(safe-area-inset-bottom)) !important}}'
+    '</style>'
+    '<nav class="proto-variant" aria-label="Design version"><span>Version</span>'
+    '<button type="button" data-variant="a" aria-pressed="true">A</button>'
+    '<button type="button" data-variant="b" aria-pressed="false">B</button></nav>'
+    '<script>(function () {'
+    '  document.documentElement.classList.add("proto-variant-on");'
+    '  var overlay = document.getElementById("iapOverlay"), btns = document.querySelectorAll(".proto-variant button");'
+    '  function apply(v) {'
+    '    overlay.setAttribute("data-variant", v);'
+    '    btns.forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.variant === v); });'
+    '    var url = new URL(location.href); if (v === "b") url.searchParams.set("variant", "b"); else url.searchParams.delete("variant"); history.replaceState(null, "", url);'
+    '  }'
+    '  btns.forEach(function (b) { b.addEventListener("click", function () { apply(b.dataset.variant); }); });'
+    '  apply(new URLSearchParams(location.search).get("variant") === "b" ? "b" : "a");'
+    '})();</script>'
+)
+
 def once(s, a, b):
     assert s.count(a) >= 1, a[:60]
     return s.replace(a, b, 1)
@@ -93,7 +125,7 @@ out = snapshot
 out = once(out, '<title>', '<title>[Prototype] IAP Popup · ')
 out = once(out, '</head>', HEAD + '</head>')
 out = once(out, '<div class="headers_container__LC81Q">', HEADER + '<div class="headers_container__LC81Q proto-dt-header">')
-out = once(out, '</body>', popup + TRIGGER + HOLIDAY_SWITCH + '</body>')
+out = once(out, '</body>', popup + TRIGGER + HOLIDAY_SWITCH + VARIANT_SWITCH + '</body>')
 
 # No link leads to the live sites: every <a> pointing at a production domain opens the
 # pricing page prototype in a new tab instead.
